@@ -5,6 +5,7 @@
 
 import {
   esc, md, toast, normalizePuzzle, normalizeCollection, legendHtml,
+  legendColor, legendColorOptions,
 } from './engine.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -20,17 +21,25 @@ function blankPuzzle() {
     id: '', title: '', difficulty: 'medium', tags: [],
     image: '', imageAlt: '',
     task: '', question: 'What are the odds? (%)',
-    legend: [{ name: '', skills: [], note: '' }],
+    legend: [{ name: '', skills: [], note: '', color: '' }],
     answer: 50, exact: '', solution: '', author: '', tolerance: 5,
   };
 }
 
 function legendRowHtml(entry = {}) {
+  const hex = legendColor(entry.color);
   return `<div class="row">
-    <input type="text" class="lg-name" placeholder="Player, e.g. #1 Blitzer (your team)" value="${esc(entry.name || '')}">
-    <input type="text" class="lg-skills" placeholder="Skills, comma separated, e.g. Sure Hands, Block" value="${esc((entry.skills || []).join(', '))}">
-    <input type="text" class="lg-note" placeholder="Note, e.g. MA 6 ST 3 AG 3+" value="${esc(entry.note || '')}">
-    <button type="button" class="btn-ghost btn-remove-legend" title="Remove this player">✕</button>
+    <div class="row-line">
+      <select class="lg-color" title="Colour of this player in the legend"${hex ? ` style="border-left:4px solid ${hex}"` : ''}>
+        ${legendColorOptions(entry.color)}
+      </select>
+      <input type="text" class="lg-name" placeholder="Player, e.g. #1 Blitzer (your team)" value="${esc(entry.name || '')}">
+      <button type="button" class="btn-ghost btn-remove-legend" title="Remove this player">✕</button>
+    </div>
+    <div class="row-line two">
+      <input type="text" class="lg-skills" placeholder="Skills, comma separated, e.g. Sure Hands, Block" value="${esc((entry.skills || []).join(', '))}">
+      <input type="text" class="lg-note" placeholder="Note, e.g. MA 6 ST 3 AG 3+" value="${esc(entry.note || '')}">
+    </div>
   </div>`;
 }
 
@@ -43,7 +52,8 @@ function readForm() {
     name: $('.lg-name', row).value.trim(),
     skills: $('.lg-skills', row).value.split(',').map(s => s.trim()).filter(Boolean),
     note: $('.lg-note', row).value.trim(),
-  })).filter(e => e.name || e.skills.length || e.note);
+    color: $('.lg-color', row)?.value || '',
+  })).filter(e => e.name || e.skills.length || e.note || e.color);
 
   return {
     id: $('#f-id').value.trim(),
@@ -246,6 +256,14 @@ function wire() {
   $('#btn-add-legend').addEventListener('click', () => {
     $('#legend-rows').insertAdjacentHTML('beforeend', legendRowHtml({}));
     refresh();
+  });
+
+  // Paint the chosen colour straight onto the select, so the row reads as a swatch.
+  $('#legend-rows').addEventListener('change', (e) => {
+    const sel = e.target.closest('.lg-color');
+    if (!sel) return;
+    const hex = legendColor(sel.value);
+    sel.style.borderLeft = hex ? `4px solid ${hex}` : '';
   });
 
   $('#legend-rows').addEventListener('click', (e) => {

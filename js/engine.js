@@ -117,6 +117,35 @@ export function wilson(k, n, z = 1.6448536269514722) {
   return { p, lo: Math.max(0, (c - w) / d), hi: Math.min(1, (c + w) / d) };
 }
 
+/* ----------------------------------------------------------- legend colours */
+
+/**
+ * Fixed palette for legend entries. A legend row may carry `color: <id>`;
+ * the id is what lands in puzzles.json (stable, human readable), the hex is
+ * what gets painted. Anything unknown falls back to "" = neutral.
+ */
+export const LEGEND_COLORS = [
+  { id: 'blue',    label: 'Blue',    hex: '#4f9bff' },
+  { id: 'red',     label: 'Red',     hex: '#e5534b' },
+  { id: 'green',   label: 'Green',   hex: '#3fb950' },
+  { id: 'yellow',  label: 'Yellow',  hex: '#e3b341' },
+  { id: 'purple',  label: 'Purple',  hex: '#a371f7' },
+  { id: 'white',   label: 'White',   hex: '#e7eef5' },
+];
+
+export function legendColor(id) {
+  return LEGEND_COLORS.find(c => c.id === String(id ?? '').trim().toLowerCase())?.hex || '';
+}
+
+export function legendColorOptions(selected = '') {
+  const cur = String(selected ?? '').trim().toLowerCase();
+  return [
+    `<option value=""${cur ? '' : ' selected'}>—</option>`,
+    ...LEGEND_COLORS.map(c =>
+      `<option value="${c.id}"${c.id === cur ? ' selected' : ''}>${c.label}</option>`),
+  ].join('');
+}
+
 /* ----------------------------------------------------------- puzzle files */
 
 const REQUIRED_NUM = ['answer'];
@@ -149,6 +178,8 @@ export function normalizePuzzle(p, i = 0) {
       skills: Array.isArray(e.skills) ? e.skills.map(String).filter(Boolean)
         : String(e.skills ?? '').split(',').map(s => s.trim()).filter(Boolean),
       note: String(e.note ?? ''),
+      color: LEGEND_COLORS.some(c => c.id === String(e.color ?? '').trim().toLowerCase())
+        ? String(e.color).trim().toLowerCase() : '',
     }));
 
   return {
@@ -203,14 +234,21 @@ export function legendHtml(p) {
   if (!p.legend.length) {
     return `<p class="muted small">No skills or players to declare in this puzzle — everything you need is in the text.</p>`;
   }
-  const rows = p.legend.map(e => `<tr>
-      <td><b>${esc(e.name)}</b>${e.note ? `<div class="muted small mono">${esc(e.note)}</div>` : ''}</td>
-      <td>${e.skills.length ? e.skills.map(s => `<span class="skill">${esc(s)}</span>`).join('') : '<span class="muted">—</span>'}</td>
-    </tr>`).join('');
-  return `<div class="table-wrap"><table class="legend">
-      <thead><tr><th>Player</th><th>Skills in this puzzle</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table></div>`;
+  const rows = p.legend.map(e => {
+    const hex = legendColor(e.color);
+    const style = hex ? ` style="--c:${hex}"` : '';
+    return `<li class="legend-row"${style}>
+      <div class="legend-name">
+        <i class="lg-dot"${hex ? ` style="background:${hex}"` : ''} aria-hidden="true"></i>
+        <b>${esc(e.name)}</b>
+        ${e.note ? `<span class="legend-note mono">${esc(e.note)}</span>` : ''}
+      </div>
+      <div class="legend-skills">${e.skills.length
+        ? e.skills.map(s => `<span class="skill">${esc(s)}</span>`).join('')
+        : '<span class="muted">—</span>'}</div>
+    </li>`;
+  }).join('');
+  return `<ul class="legend">${rows}</ul>`;
 }
 
 export function toast(message, ms = 2400) {

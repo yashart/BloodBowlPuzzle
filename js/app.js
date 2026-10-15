@@ -89,6 +89,7 @@ function badge() {
 
 function screenError(title, message) {
   app().innerHTML = `
+    <div class="zen-page">
     <div class="card">
       <h1>⚠️ ${esc(title)}</h1>
       <div class="err-box small">${esc(message)}</div>
@@ -99,23 +100,26 @@ function screenError(title, message) {
       </p>
       <div class="btn-row"><button class="primary" onclick="location.reload()">Try again</button>
       <a class="btn btn-ghost" href="editor.html">Open the puzzle editor</a></div>
+    </div>
     </div>`;
 }
 
 function screenResume(saved) {
   const n = state.puzzles.length;
   app().innerHTML = `
-    <div class="banner">
-      <div style="flex:1 1 320px">
-        <b>Unfinished run found.</b>
-        <div class="muted small">You answered ${saved.answers.length} of ${n} puzzles before. Continue where you stopped, or start again from puzzle 1.</div>
+    <div class="zen-page">
+      <div class="banner">
+        <div style="flex:1 1 320px">
+          <b>Unfinished run found.</b>
+          <div class="muted small">You answered ${saved.answers.length} of ${n} puzzles before. Continue where you stopped, or start again from puzzle 1.</div>
+        </div>
+        <div class="btn-row">
+          <button class="primary" id="btn-resume">Continue (puzzle ${saved.idx + 1})</button>
+          <button class="btn-ghost" id="btn-fresh">Start over</button>
+        </div>
       </div>
-      <div class="btn-row">
-        <button class="primary" id="btn-resume">Continue (puzzle ${saved.idx + 1})</button>
-        <button class="btn-ghost" id="btn-fresh">Start over</button>
-      </div>
-    </div>
-    <div id="run-root"></div>`;
+      <div id="run-root"></div>
+    </div>`;
 
   $('#btn-resume').addEventListener('click', () => {
     $('.banner')?.remove();
@@ -131,22 +135,11 @@ function screenResume(saved) {
 
 function progressHtml() {
   const n = state.puzzles.length;
-  const dots = state.puzzles.map((_, i) => {
-    const a = state.answers[i];
-    const cls = ['dot'];
-    if (a) cls.push(a.hit ? 'hit' : 'miss');
-    if (i === state.idx) cls.push('current');
-    return `<span class="${cls.join(' ')}" title="Puzzle ${i + 1}"></span>`;
-  }).join('');
   const done = Math.round((state.answers.filter(Boolean).length / n) * 100);
   return `
-    <div class="progress-wrap">
-      <div class="progress-top">
-        <span>Puzzle <b>${Math.min(state.idx + 1, n)}</b> of ${n}</span>
-        <span>${state.answers.filter(Boolean).length} answered · a hit is within ±${TOLERANCE} pp</span>
-      </div>
-      <div class="progress"><i style="width:${done}%"></i></div>
-      <div class="dots" style="margin-top:.45rem">${dots}</div>
+    <div class="zen-top">
+      <div class="zen-progress"><i style="width:${done}%"></i></div>
+      <div class="zen-count">Puzzle <b>${Math.min(state.idx + 1, n)}</b> / ${n}</div>
     </div>`;
 }
 
@@ -160,44 +153,46 @@ function screenRun() {
   ].join('');
 
   app().innerHTML = `
-    <div class="card">
-      <div class="card-head">
-        ${progressHtml()}
-        <button class="btn-ghost btn-sm" id="btn-restart" title="Clear this run and start again">Restart</button>
-      </div>
-      <hr>
-      <div class="puzzle-grid">
-        <div>
-          ${puzzleMediaHtml(p)}
-          <div class="task">
-            <h3>Mission</h3>
-            <div>${md(p.task)}</div>
+    <div class="zen">
+      ${progressHtml()}
+      <div class="zen-main">
+        <div class="zen-sheet">
+          <div class="puzzle-grid">
+            <div class="zen-media">${puzzleMediaHtml(p)}</div>
+            <div class="zen-side">
+              <div class="zen-title-row">
+                <h2 class="zen-title">${esc(p.title)}</h2>
+                <div class="chips">${chips}</div>
+              </div>
+              <div class="task">
+                <h3>Mission</h3>
+                <div>${md(p.task)}</div>
+              </div>
+              <h3 class="zen-sub">Conditions — who has what</h3>
+              ${legendHtml(p)}
+            </div>
           </div>
         </div>
-        <div>
-          <div class="card-head">
-            <h2>${esc(p.title)}</h2>
-          </div>
-          <div class="chips" style="margin-bottom:.9rem">${chips}</div>
-          <h3 class="muted small" style="text-transform:uppercase;letter-spacing:.06em">Conditions — who has what</h3>
-          ${legendHtml(p)}
-        </div>
       </div>
-      <hr>
-      <div class="answer-box" id="answer-box">
-        <div class="question">${esc(p.question)}</div>
-        <div class="slider-row">
-          <div class="slider">
-            <input type="range" id="guess" min="0" max="100" step="1" value="50" aria-label="Your answer in percent">
-            <div class="range-scale"><span>0%</span><span>50%</span><span>100%</span></div>
+      <div class="zen-foot">
+        <div class="answer-box" id="answer-box">
+          <div class="question">${esc(p.question)}</div>
+          <div class="slider-row">
+            <div class="slider">
+              <input type="range" id="guess" min="0" max="100" step="1" value="50" aria-label="Your answer in percent">
+              <div class="range-scale"><span>0%</span><span>50%</span><span>100%</span></div>
+            </div>
+            <output class="readout" id="readout">50%</output>
           </div>
-          <output class="readout" id="readout">50%</output>
+          <div class="btn-row btn-center">
+            <button class="primary btn-lg" id="btn-submit">Submit answer</button>
+          </div>
+          <div class="btn-row btn-center">
+            <button class="link-btn" id="btn-restart" title="Clear this run and start again">Restart run</button>
+          </div>
         </div>
-        <div class="btn-row" style="margin-top:.7rem">
-          <button class="primary" id="btn-submit">Submit answer</button>
-        </div>
+        <div id="reveal"></div>
       </div>
-      <div id="reveal"></div>
     </div>`;
 
   const slider = $('#guess');
@@ -254,9 +249,11 @@ function reveal(guess) {
           <h3>Solution</h3>
           ${md(p.solution) || '<p class="muted">No solution text was written for this puzzle yet.</p>'}
         </div>
-        <div class="next-row">
+        <div class="next-row btn-center">
           <span class="muted small">${last ? 'That was the last puzzle.' : `Next up: <b>${esc(state.puzzles[state.idx].title)}</b>`}</span>
-          <button class="primary" id="btn-next">${last ? 'See my results' : 'Next puzzle →'}</button>
+          <div class="btn-row btn-center">
+            <button class="primary btn-lg" id="btn-next">${last ? 'See my results' : 'Next puzzle →'}</button>
+          </div>
         </div>
       </div>
     </div>`;
@@ -317,12 +314,9 @@ function screenResults() {
   }).join('');
 
   app().innerHTML = `
-    <div class="card">
-      <div class="card-head">
-        <h1 style="margin:0">Run finished <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true" style="vertical-align:-5px">
-          <ellipse cx="16" cy="16" rx="10" ry="13" fill="#e8e2d4" stroke="#0d1015" stroke-width="2"/>
-          <path d="M16 6.5v19M11.5 11h9M11.5 16h9M11.5 21h9" stroke="#c1352f" stroke-width="2" stroke-linecap="round"/>
-        </svg></h1>
+    <div class="zen-page">
+      <div class="results-head">
+        <h1>Run finished</h1>
         <span class="badge accuracy">${fmtPct(s.accuracy, 0)} accuracy</span>
       </div>
       <div class="stats-row">
@@ -331,7 +325,7 @@ function screenResults() {
         <div class="stat"><b>${ciText}</b><span>90% interval of your error</span></div>
         <div class="stat"><b>${fmtPct(s.accuracy, 0)}</b><span>accuracy, 90% CI ${s.acc ? fmtPct(s.acc.lo * 100, 0) + '–' + fmtPct(s.acc.hi * 100, 0) : '—'}</span></div>
       </div>
-      <p class="muted small" style="margin-top:.9rem">
+      <p class="muted small zen-note">
         <b>How to read the 90% interval:</b> the interval is a t-interval on your average miss distance
         (${fmtPct(s.meanError, 2)} ± ${ci ? fmtPct(ci.t * ci.se, 2) : '—'}, n = ${s.n}).
         Repeat this run many times and about 9 out of 10 intervals built the same way would contain your true
@@ -339,25 +333,22 @@ function screenResults() {
         the puzzle's tolerance of the true chance counts as a hit — by default ±${TOLERANCE} pp
         (this tolerance exists because a slider cannot express fractions such as 74.07%).
       </p>
-    </div>
 
-    <div class="card" id="lb-card">
-      <div class="card-head">
-        <h2 style="margin:0">Leaderboard</h2>
-        <span class="badge ${Leaderboard.isShared ? 'firebase' : 'local'}" id="lb-state">${Leaderboard.isShared ? 'shared' : 'this browser'}</span>
-      </div>
-      <div id="lb-body"><span class="spinner"></span> <span class="muted">loading…</span></div>
-    </div>
+      <section class="zen-block" id="lb-card">
+        <h2>Leaderboard <span class="badge ${Leaderboard.isShared ? 'firebase' : 'local'}" id="lb-state">${Leaderboard.isShared ? 'shared' : 'this browser'}</span></h2>
+        <div id="lb-body"><span class="spinner"></span> <span class="muted">loading…</span></div>
+      </section>
 
-    <div class="card">
-      <div class="card-head"><h2 style="margin:0">Your answers</h2></div>
-      <div class="table-wrap"><table class="board">
-        <thead><tr><th>#</th><th>Puzzle</th><th class="num">You</th><th class="num">Answer</th><th class="num">Miss</th><th>Verdict</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table></div>
-      <div class="btn-row" style="margin-top:1rem">
-        <button class="primary" id="btn-again">Play again</button>
-        <a class="btn" href="guide.html">How scoring works</a>
+      <section class="zen-block">
+        <h2>Your answers</h2>
+        <div class="table-wrap"><table class="board">
+          <thead><tr><th>#</th><th>Puzzle</th><th class="num">You</th><th class="num">Answer</th><th class="num">Miss</th><th>Verdict</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+      </section>
+
+      <div class="btn-row btn-center zen-actions">
+        <button class="primary btn-lg" id="btn-again">Play again</button>
       </div>
     </div>`;
 
