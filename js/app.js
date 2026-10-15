@@ -290,65 +290,18 @@ function computeStats() {
 
 function screenResults() {
   const s = computeStats();
-  const ci = s.ci;
-  const ciText = ci
-    ? `${fmtPct(ci.lo, 2)} … ${fmtPct(ci.hi, 2)}`
-    : 'not enough data';
-  const rows = state.answers.map((a, i) => {
-    if (!a) return '';
-    const p = state.puzzles[i];
-    return `<tr>
-      <td class="num">${i + 1}</td>
-      <td><b>${esc(p.title)}</b>
-        <details class="help" style="margin-top:.35rem">
-          <summary class="small">solution</summary>
-          <div class="solution small">${md(p.solution) || '<span class="muted">—</span>'}</div>
-        </details>
-      </td>
-      <td class="num">${fmtNum(a.guess)}%</td>
-      <td class="num">${fmtNum(a.answer)}%</td>
-      <td class="num">${fmtPct(a.error, 1, true)}</td>
-      <td>${a.hit ? '<span style="color:var(--good)">✔ hit</span>' : '<span style="color:var(--bad)">✖ miss</span>'}
-        <div class="muted small">±${a.tol ?? TOLERANCE} pp</div></td>
-    </tr>`;
-  }).join('');
 
   app().innerHTML = `
     <div class="zen-page">
       <div class="results-head">
         <h1>Run finished</h1>
-        <span class="badge accuracy">${fmtPct(s.accuracy, 0)} accuracy</span>
       </div>
       <div class="stats-row">
-        <div class="stat"><b>${s.hits}/${s.n}</b><span>hits within tolerance</span></div>
         <div class="stat"><b>${fmtPct(s.meanError, 2)}</b><span>mean error</span></div>
-        <div class="stat"><b>${ciText}</b><span>90% interval of your error</span></div>
-        <div class="stat"><b>${fmtPct(s.accuracy, 0)}</b><span>accuracy, 90% CI ${s.acc ? fmtPct(s.acc.lo * 100, 0) + '–' + fmtPct(s.acc.hi * 100, 0) : '—'}</span></div>
       </div>
-      <p class="muted small zen-note">
-        <b>How to read the 90% interval:</b> the interval is a t-interval on your average miss distance
-        (${fmtPct(s.meanError, 2)} ± ${ci ? fmtPct(ci.t * ci.se, 2) : '—'}, n = ${s.n}).
-        Repeat this run many times and about 9 out of 10 intervals built the same way would contain your true
-        average error. Your score, on the other hand, is a plain hit/miss count: every guess within
-        the puzzle's tolerance of the true chance counts as a hit — by default ±${TOLERANCE} pp
-        (this tolerance exists because a slider cannot express fractions such as 74.07%).
-      </p>
-
-      <section class="zen-block" id="lb-card">
-        <h2>Leaderboard <span class="badge ${Leaderboard.isShared ? 'firebase' : 'local'}" id="lb-state">${Leaderboard.isShared ? 'shared' : 'this browser'}</span></h2>
-        <div id="lb-body"><span class="spinner"></span> <span class="muted">loading…</span></div>
-      </section>
-
-      <section class="zen-block">
-        <h2>Your answers</h2>
-        <div class="table-wrap"><table class="board">
-          <thead><tr><th>#</th><th>Puzzle</th><th class="num">You</th><th class="num">Answer</th><th class="num">Miss</th><th>Verdict</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table></div>
-      </section>
 
       <div class="btn-row btn-center zen-actions">
-        <button class="primary btn-lg" id="btn-again">Play again</button>
+        <button class="primary btn-lg" id="btn-again">Run again</button>
       </div>
     </div>`;
 
@@ -358,123 +311,6 @@ function screenResults() {
     screenRun();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
-
-  // The leaderboard card holds both the "save my result" form and the table itself.
-  renderSubmitForm(s);
-}
-
-function renderSubmitForm(s) {
-  const host = $('#lb-body');
-  if (!host) return;
-
-  const formHtml = `
-    <div class="split" style="align-items:end">
-      <div class="field" style="margin:0">
-        <label for="nick">Your nickname <span class="hint">(optional — leave blank to stay anonymous)</span></label>
-        <input type="text" id="nick" maxlength="24" placeholder="e.g. Grifon" value="${esc(state.nick)}">
-      </div>
-      <div class="btn-row">
-        <button class="primary" id="btn-save">Save my result</button>
-      </div>
-    </div>
-    <p class="muted small" style="margin-top:.5rem">${esc(Leaderboard.message)}</p>
-    <div id="save-status" class="status"></div>
-    <hr>
-    <div id="my-rank" class="small" style="margin-bottom:.8rem"><span class="spinner"></span> <span class="muted">checking your place…</span></div>
-    <div id="board-host"><span class="spinner"></span> <span class="muted">loading the table…</span></div>`;
-
-  host.innerHTML = formHtml;
-
-  $('#btn-save').addEventListener('click', async (e) => {
-    const btn = e.currentTarget;
-    const nick = cleanNick($('#nick').value);
-    state.nick = nick;
-    try { localStorage.setItem('bbp.nick', nick); } catch { /* ignore */ }
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> saving…';
-    const res = await Leaderboard.submit({
-      nick,
-      accuracy: s.accuracy,
-      meanError: s.meanError,
-      ci90: s.ci ? [s.ci.lo, s.ci.hi] : null,
-      total: s.n,
-      misses: s.misses,
-      puzzleSet: state.runId,
-    });
-    btn.disabled = false;
-    btn.textContent = 'Save my result';
-    const st = $('#save-status');
-    if (!res.ok) {
-      st.className = 'status err';
-      st.innerHTML = `Could not save: ${esc(res.error)}<br>Common cause: Firestore rules are still locked (see README → Firebase).`;
-      return;
-    }
-    state.submitted = res.entry;
-    const rank = await Leaderboard.rankOf(res.entry);
-    st.className = 'status ok';
-    const total = Leaderboard.totalEntries();
-    st.innerHTML = `Saved${rank ? ` — <b>rank #${rank}</b>` : ''}${total ? ` of ${total} runs` : ''}${Leaderboard.isShared ? '' : ' (this browser only)'}.`;
-    toast('Result saved');
-    renderBoard();
-    renderMyRank(s);
-  });
-
-  renderBoard();
-  renderMyRank(s);
-}
-
-/** "You would land at rank #N" — shown even before the player saves anything. */
-async function renderMyRank(s) {
-  const host = $('#my-rank');
-  if (!host) return;
-  const rank = await Leaderboard.rankOf({
-    accuracy: s.accuracy,
-    meanError: s.meanError,
-    ci90: s.ci ? [s.ci.lo, s.ci.hi] : null,
-  });
-  const total = Leaderboard.totalEntries();
-  if (rank == null) {
-    host.innerHTML = '<span class="muted">Your current place could not be checked (leaderboard backend unreachable).</span>';
-    return;
-  }
-  host.innerHTML = `Your run — accuracy <b>${fmtPct(s.accuracy, 0)}</b>, mean error <b>${fmtPct(s.meanError, 2)}</b>
-    — would land at <b>rank #${rank}</b>${total ? ` of ${total} saved result${total === 1 ? '' : 's'}` : ' on this board'}.
-    Enter a nickname below to claim the spot.`;
-}
-
-async function renderBoard() {
-  const host = $('#board-host');
-  if (!host) return;
-  const res = await Leaderboard.top(20);
-  if (!res.ok) {
-    host.innerHTML = `<div class="err-box small">Leaderboard unavailable: ${esc(res.error)}</div>`;
-    return;
-  }
-  if (!res.rows.length) {
-    host.innerHTML = `<p class="muted small">No saved results yet — you can be the first on the board.</p>`;
-    return;
-  }
-  const rows = res.rows.map((r, i) => {
-    const mine = res.mine.has(r.id);
-    const cls = [`rank-${i + 1}`];
-    return `<tr class="${mine ? 'me' : ''}">
-      <td class="${i < 3 ? cls[i] : ''}">#${i + 1}</td>
-      <td>${esc(r.nick)}${mine ? ' <span class="badge" style="border-color:var(--blue);color:var(--blue)">you</span>' : ''}</td>
-      <td class="num">${fmtPct(r.accuracy, 0)}</td>
-      <td class="num">${fmtPct(r.meanError, 2)}</td>
-      <td class="num">${r.total || '—'}</td>
-      <td class="num muted">${r.when ? esc(fmtDate(r.when)) : '—'}</td>
-    </tr>`;
-  }).join('');
-  host.innerHTML = `
-    <div class="table-wrap"><table class="board">
-      <thead><tr><th>Rank</th><th>Nick</th><th class="num" title="Share of guesses within tolerance">Accuracy</th>
-      <th class="num" title="Average miss distance in percentage points">Mean error</th>
-      <th class="num">Puzzles</th><th class="num">When</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table></div>
-    <p class="muted small" style="margin-top:.6rem">Sorted by accuracy (guesses inside each puzzle's tolerance, ±${TOLERANCE} pp by default), then by mean error.
-    ${Leaderboard.isShared ? '' : 'This table lives in <b>your</b> browser only until a Firebase backend is configured.'}</p>`;
 }
 
 /* ----------------------------------------------------------- start */
