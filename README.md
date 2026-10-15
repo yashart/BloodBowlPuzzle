@@ -103,8 +103,8 @@ A single puzzle looks like this:
   "task": "Turn 8 … The ball lies in the tackle zone of **#5 Lineman**. Your **#1 Blitzer** has to pick it up (4+)…",
   "question": "What is the chance that you score the touchdown this turn? (%)",
   "legend": [
-    { "name": "#1 Blitzer (your team)", "skills": ["Sure Hands", "Block"], "note": "MA 6 ST 3 AG 3+" },
-    { "name": "#5 Lineman (opponent)", "skills": [], "note": "MA 6 ST 3 AG 3+" }
+    { "name": "#1 Blitzer (your team)", "skills": ["Sure Hands", "Block"], "note": "MA 6 ST 3 AG 3+", "color": "blue" },
+    { "name": "#5 Lineman (opponent)", "skills": [], "note": "MA 6 ST 3 AG 3+", "color": "red" }
   ],
   "answer": 75,
   "exact": "3/4 = 75%",
@@ -114,7 +114,10 @@ A single puzzle looks like this:
 ```
 
 Field reference: `answer` is the integer the slider is compared against; `exact` is just a nicer display value;
-`tolerance` (optional, default 5) overrides the hit tolerance for that puzzle; `task` and `solution` accept a small
+`tolerance` (optional, default 5) overrides the hit tolerance for that puzzle; each `legend` entry may carry a
+`color` — one of `blue`, `red`, `green`, `yellow`, `purple`, `white` — that tints the player's name, dot and skill
+chips so the legend matches the markers on the pitch image (cosmetic only, omit it and the row is neutral);
+`task` and `solution` accept a small
 markdown subset — `**bold**`, `` `code` ``, `- ` bullets, blank lines for paragraphs. HTML is escaped, so anything you
 paste is rendered literally.
 

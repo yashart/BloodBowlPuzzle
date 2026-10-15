@@ -48,7 +48,7 @@
 
     <!-- ------------------------------------------------ form -->
     <section class="card" id="form-card">
-      <div class="card-head">
+      <div class="card-top">
         <h1 style="margin:0">Puzzle</h1>
         <div class="btn-row" style="margin-left:auto">
           <button id="btn-new" class="btn-ghost btn-sm">New / clear</button>
@@ -106,7 +106,9 @@
       </div>
 
       <h3 style="margin-top:1rem">Conditions — who has what</h3>
-      <p class="muted small">One row per player or squad worth naming. Leave the skills field empty for "no relevant skills".</p>
+      <p class="muted small">One row per player or squad worth naming. Pick a <b>colour</b> (the team this player plays
+        for) so the legend matches the markers on your pitch image — leave it on "—" for no colour.
+        Leave the skills field empty for "no relevant skills".</p>
       <div class="legend-editor">
         <div id="legend-rows"></div>
         <button type="button" id="btn-add-legend" class="btn-sm">+ add player</button>
@@ -142,7 +144,7 @@
     <!-- ------------------------------------------------ right column -->
     <section>
       <div class="card">
-        <div class="card-head"><h2 style="margin:0">JSON</h2>
+        <div class="card-top"><h2 style="margin:0">JSON</h2>
           <span class="muted small" style="margin-left:auto">this is what gets pasted into puzzles.json</span>
         </div>
         <pre style="max-height:44vh"><code id="json-out" class="small"></code></pre>
@@ -150,12 +152,12 @@
       </div>
 
       <div class="card">
-        <div class="card-head"><h2 style="margin:0">Live preview</h2></div>
+        <div class="card-top"><h2 style="margin:0">Live preview</h2></div>
         <div id="preview"></div>
       </div>
 
       <div class="card">
-        <div class="card-head">
+        <div class="card-top">
           <h2 style="margin:0">Export</h2>
           <span class="muted small" style="margin-left:auto" id="deck-source"></span>
         </div>
@@ -173,7 +175,7 @@
       </div>
 
       <div class="card">
-        <div class="card-head"><h2 style="margin:0">Field reference</h2></div>
+        <div class="card-top"><h2 style="margin:0">Field reference</h2></div>
         <div class="table-wrap"><table class="board">
           <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
           <tbody>
@@ -181,7 +183,10 @@
             <tr><td class="mono">answer</td><td>Integer 0–100. The slider is 0–100% and a guess within ±5 pp counts as a hit.</td></tr>
             <tr><td class="mono">task</td><td>The situation and the mission. Markdown subset is supported.</td></tr>
             <tr><td class="mono">question</td><td>The line right above the slider, e.g. "What is the chance you knock the carrier down? (%)".</td></tr>
-            <tr><td class="mono">legend</td><td>Conditions: who has which skills in this puzzle.</td></tr>
+            <tr><td class="mono">legend</td><td>Conditions: who has which skills in this puzzle. Each entry is
+              <code>{ name, skills[], note, color }</code>; <code>color</code> is one of
+              <code>blue</code>, <code>red</code>, <code>green</code>, <code>yellow</code>, <code>purple</code>,
+              <code>white</code> — or omitted for no colour. It is only cosmetic: the puzzle reads the same without it.</td></tr>
             <tr><td class="mono">solution</td><td>Full worked solution, revealed after submitting.</td></tr>
             <tr><td class="mono">exact</td><td>Optional exact value shown next to the answer, e.g. <code>5/9 = 55.56%</code>.</td></tr>
             <tr><td class="mono">image</td><td>Path relative to the site root. Use <code>images/your-file.png</code>.</td></tr>
