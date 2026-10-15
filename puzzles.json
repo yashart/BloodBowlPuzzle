@@ -1,0 +1,257 @@
+{
+  "version": 1,
+  "meta": {
+    "generated": "2026-10-15T15:09:57.698Z",
+    "generator": "blood-bowl-puzzles editor",
+    "count": 7
+  },
+  "puzzles": [
+    {
+      "id": "base-puzzles-01",
+      "title": "Mummy TD",
+      "difficulty": "medium",
+      "tags": [],
+      "image": "images/puzzle-01.png",
+      "imageAlt": "",
+      "task": "Score TD. **1 reroll** is available.",
+      "question": "What are the odds? (%)",
+      "legend": [
+        {
+          "name": "Blue L",
+          "skills": [
+            "Block"
+          ],
+          "note": "MA 6 ST 3 AG 3+"
+        },
+        {
+          "name": "Red M",
+          "skills": [
+            "Block"
+          ],
+          "note": "MA 3 ST 5 AG 5+"
+        }
+      ],
+      "answer": 79,
+      "exact": "",
+      "solution": "Blitz in Mummy, do not rr BD results. If not to knock down or push away - 4++ dodge",
+      "author": "WorldSitar, Akyama & neproxy, Rubbl Final",
+      "tolerance": 5
+    },
+    {
+      "id": "demo-01-loose-ball",
+      "title": "The Loose Ball",
+      "difficulty": "easy",
+      "tags": [
+        "pick-up",
+        "reroll",
+        "sure-hands"
+      ],
+      "image": "images/puzzle-01.svg",
+      "imageAlt": "Pitch diagram: Blitzer next to a loose ball held in one tackle zone",
+      "task": "Turn 8 of the second half and you are one touchdown behind. The ball is loose one square inside the opponent's half, right next to your **Blitzer #1**. The bad news: the ball lies in the tackle zone of the opposing Lineman #5.\n\nYour Blitzer has to pick the ball up (**4+**: AG 3+ with -1 for the tackle zone), then he just has to walk 4 open squares into the end zone. He has **Sure Hands** and you have **no Team Re-Roll** left this turn.",
+      "question": "What is the chance that you score the touchdown this turn? (%)",
+      "legend": [
+        {
+          "name": "#1 Blitzer (your team)",
+          "skills": [
+            "Sure Hands",
+            "Block"
+          ],
+          "note": "MA 6  ST 3  AG 3+  PA 4+  AV 9+"
+        },
+        {
+          "name": "#5 Lineman (opponent)",
+          "skills": [],
+          "note": "MA 6  ST 3  AG 3+  AV 9+"
+        }
+      ],
+      "answer": 75,
+      "exact": "3/4 = 75%",
+      "solution": "**Step 1 - pick the ball up.** AG 3+ with one opposing tackle zone is a **4+** roll: 3 faces out of 6, so exactly 50%.\n\n**Step 2 - Sure Hands.** Sure Hands re-rolls a failed pick-up, so the ball comes up once in 1 - (1/2)² = 1 - 1/4 = **3/4 = 75%** of the cases.\n\n- Pick-up on the first try: 50%\n- Pick-up on the Sure Hands re-roll: the other 50% x 50% = 25%\n- Everything else: the ball stays loose - turnover\n\n**Step 3 - the run.** Four open squares, no dodge, no rush, no opponent in reach: automatic (0 re-rolls needed).\n\nTotal: 75% x 100% = **75%**.\n\nThis is why Sure Hands is the single most annoying skill in the game for a defence.",
+      "author": "demo",
+      "tolerance": 5
+    },
+    {
+      "id": "demo-02-quick-pass",
+      "title": "Quick Pass, Clean Catch",
+      "difficulty": "easy",
+      "tags": [
+        "passing",
+        "catch",
+        "reroll"
+      ],
+      "image": "images/puzzle-02.svg",
+      "imageAlt": "Pitch diagram: thrower in the open passing to a catcher in the end zone",
+      "task": "Turn 16, and you are two squares short of the draw. **#3 Thrower** stands in the open with the ball, **#4 Catcher** is already standing in the end zone. Nobody is marking the thrower and nobody is marking the catcher.\n\nThe pass is a **Quick Pass: 2+** (PA 2+, no modifiers). The catch is a **3+** for the Catcher (AG 3+, no modifiers) and he has the **Catch** skill. You have no Team Re-Roll left.",
+      "question": "What is the chance of a completed pass and a touchdown? (%)",
+      "legend": [
+        {
+          "name": "#3 Thrower (your team)",
+          "skills": [
+            "Pass",
+            "Sure Hands"
+          ],
+          "note": "PA 2+  AG 3+"
+        },
+        {
+          "name": "#4 Catcher (your team)",
+          "skills": [
+            "Catch",
+            "Dodge"
+          ],
+          "note": "MA 8  AG 3+"
+        }
+      ],
+      "answer": 74,
+      "exact": "40/54 = 74.07%",
+      "solution": "The two rolls are independent, so the chances multiply.\n\n**Pass (2+):** 5 success faces out of 6 = 5/6 = 83.33%.\n\n**Catch (3+ with Catch):** a 3+ is 4/6 = 2/3 = 66.67%; Catch re-rolls the failure, so 1 - (1/3)² = 8/9 = 88.89%.\n\nTotal: 5/6 x 8/9 = 40/54 = **74.07%**, which rounds to **74%**.\n\nRemember the two failure modes: a natural 1 on the pass is a **fumble** (the ball bounces and the drive is over), and any failed catch sends the ball scattering from the catcher's square - which is why the difference between 74% and 100% is exactly the part of the game that keeps you awake at night.",
+      "author": "demo",
+      "tolerance": 5
+    },
+    {
+      "id": "demo-03-two-dice-block",
+      "title": "Two Dice, and He Has Block",
+      "difficulty": "medium",
+      "tags": [
+        "blocking",
+        "blitz",
+        "block-dice"
+      ],
+      "image": "images/puzzle-03.svg",
+      "imageAlt": "Pitch diagram: blitzer making a two-dice blitz against the ball carrier",
+      "task": "The opponent's ball carrier **#9** is standing in the middle of the pitch and your **Blitzer #2** can reach him with a Blitz. Declaring the Blitz gives you **two block dice and you may choose the better result**.\n\n**#9 has Block**, so a Both Down result does *not* knock him over. You have **no Team Re-Roll** left this turn. All you need is for the carrier to go down - a Push is not enough.",
+      "question": "What is the chance that you knock the ball carrier down? (%)",
+      "legend": [
+        {
+          "name": "#2 Blitzer (your team)",
+          "skills": [
+            "Block",
+            "Mighty Blow"
+          ],
+          "note": "MA 7  ST 3  AG 3+"
+        },
+        {
+          "name": "#9 Ball Carrier (opponent)",
+          "skills": [
+            "Block",
+            "Sure Hands"
+          ],
+          "note": "MA 6  ST 3  AG 3+"
+        }
+      ],
+      "answer": 56,
+      "exact": "5/9 = 55.56%",
+      "solution": "First work out how many of the 6 block dice faces actually knock the carrier down.\n\n- **Skull** - your player goes down, the carrier is fine\n- **Both Down** - against a defender with **Block** this is *not* a knockdown\n- **Push** (2 faces) - no knockdown\n- **Pow** (1 face) and **Pow/Push** (1 face) - knockdown\n\nSo 2 faces out of 6 succeed and 4 out of 6 fail.\n\n**Two dice, choose the better one:** you fail only if *both* dice fail, so the chance to knock him down is 1 - (4/6)² = 1 - 16/36 = 20/36 = 5/9 = **55.56%**, i.e. **56%**.\n\nHandy reference numbers for the same situation: 2 dice against a **Block** defender = 55.6%, 2 dice against a defender **without** Block = 75%, 1 die against a Block defender = 33.3%. That is the whole reason Block is the first skill on every shopping list.",
+      "author": "demo",
+      "tolerance": 5
+    },
+    {
+      "id": "demo-04-two-rushes",
+      "title": "Two Rushes and a Prayer",
+      "difficulty": "medium",
+      "tags": [
+        "rush",
+        "movement",
+        "sure-feet"
+      ],
+      "image": "images/puzzle-04.svg",
+      "imageAlt": "Pitch diagram: runner with the ball two squares short of the end zone",
+      "task": "Your **#5 Runner** has the ball and is standing exactly 2 squares short of the end zone. His Movement is used up, so he has to make **two Rushes** (each is a **2+** roll) to get there. The ground is open and there is nothing else left to roll.\n\nHe has **Sure Feet**, which lets him **re-roll one failed Rush per turn**. No Team Re-Roll is left.",
+      "question": "What is the chance that he reaches the end zone? (%)",
+      "legend": [
+        {
+          "name": "#5 Runner (your team)",
+          "skills": [
+            "Sure Feet",
+            "Sprint"
+          ],
+          "note": "MA 8  AG 3+"
+        }
+      ],
+      "answer": 93,
+      "exact": "0.9259 = 92.59%",
+      "solution": "A Rush is a 2+ roll: 5/6 = 83.33% per square.\n\n**Case 1 - both Rushes succeed on the first try:** 5/6 x 5/6 = 25/36 = 69.44%.\n\n**Case 2 - exactly one Rush fails, Sure Feet saves it:** the chance of exactly one failure is 2 x (1/6) x (5/6) = 10/36 = 27.78%; the re-roll then succeeds 5/6 of the time, so this case contributes 10/36 x 5/6 = 23.15%.\n\n**Case 3 - both Rushes fail:** 1/36 = 2.78%, and it is a turnover.\n\nTotal: 69.44% + 23.15% = **92.59%**, so **93%**.\n\nUseful sanity check: without Sure Feet the same run is only 25/36 = 69.4%. A single re-roll on a 5/6 roll is worth about 23 percentage points of touchdown.",
+      "author": "demo",
+      "tolerance": 5
+    },
+    {
+      "id": "demo-05-two-dodges",
+      "title": "Two Dodges",
+      "difficulty": "hard",
+      "tags": [
+        "dodge",
+        "reroll",
+        "decision"
+      ],
+      "image": "images/puzzle-05.svg",
+      "imageAlt": "Pitch diagram: ball carrier dodging twice towards the end zone",
+      "task": "Your ball carrier **#6** can only reach the end zone the painful way: the first Dodge goes into a square covered by one opponent (**4+**: AG 3+ with -1), and only then can he step into the end zone through a completely free square (**3+**). No Rushes are needed.\n\n#6 has the **Dodge** skill, which may re-roll **one** failed Dodge per turn, and you have **no Team Re-Roll** left. You may of course choose when to spend the Dodge re-roll.",
+      "question": "Playing optimally, what is the chance you score the touchdown? (%)",
+      "legend": [
+        {
+          "name": "#6 Blitzer (your team)",
+          "skills": [
+            "Dodge",
+            "Block"
+          ],
+          "note": "MA 7  AG 3+"
+        },
+        {
+          "name": "#7 Lineman (opponent)",
+          "skills": [],
+          "note": "MA 6  ST 3"
+        }
+      ],
+      "answer": 50,
+      "exact": "1/2 = 50%",
+      "solution": "The interesting part is *when* you spend the once-per-turn Dodge re-roll. You need both rolls, so the re-roll has to go on the **first** roll - and the first roll is also the harder one, so it works out nicely.\n\n- **Dodge 1 (4+ = 1/2)** with the Dodge re-roll available: 1 - (1/2)² = 3/4 = 75%\n- **Dodge 2 (3+ = 2/3)** with no re-roll left: 2/3 = 66.67%\n\nTotal: 3/4 x 2/3 = **1/2 = 50%**.\n\nFor comparison, saving the re-roll for the second Dodge gives 1/2 x (1 - (1/3)²) = 1/2 x 8/9 = 44.4% - almost 6 percentage points worse. The lesson: spend a limited re-roll on your **hardest** roll first, never on the comfortable one you will probably pass anyway.",
+      "author": "demo",
+      "tolerance": 5
+    },
+    {
+      "id": "demo-06-long-bomb",
+      "title": "The Long Bomb",
+      "difficulty": "hard",
+      "tags": [
+        "passing",
+        "catch",
+        "team-reroll",
+        "last-turn"
+      ],
+      "image": "images/puzzle-06.svg",
+      "imageAlt": "Pitch diagram: long pass across the pitch to a marked catcher in the end zone",
+      "task": "Last turn of the match, 1-1 on the scoreboard. You need it all.\n\n**#3 Thrower** is deep in your own half and has to fling the ball across the pitch: after all modifiers the pass needs a **5+** (2 faces out of 6). You have **one Team Re-Roll** left and it can be used on the pass roll (even if the thrower rolls a natural 1 fumble).\n\nThe pass is accurate, so the ball lands on **#4 Catcher** in the end zone. He is marked by one opponent, so after modifiers he catches on a **4+** (AG 3+ with -1). #4 has the **Catch** skill to re-roll a failed catch.",
+      "question": "What is the chance of the winning touchdown? (%)",
+      "legend": [
+        {
+          "name": "#3 Thrower (your team)",
+          "skills": [
+            "Pass",
+            "Nerves of Steel"
+          ],
+          "note": "PA 2+  AG 3+"
+        },
+        {
+          "name": "#4 Catcher (your team)",
+          "skills": [
+            "Catch",
+            "Dodge"
+          ],
+          "note": "MA 8  AG 4+"
+        },
+        {
+          "name": "#8 Blitzer (opponent)",
+          "skills": [
+            "Block"
+          ],
+          "note": "marking #4"
+        }
+      ],
+      "answer": 42,
+      "exact": "5/12 = 41.67%",
+      "solution": "Two independent rolls, one re-roll for each.\n\n**Pass (5+ with a Team Re-Roll):** a single try is 2/6 = 1/3 = 33.33%, so with the re-roll: 1 - (2/3)² = 5/9 = 55.56%.\n\n**Catch (4+ with Catch):** a single try is 1/2 = 50%, so with the Catch re-roll: 1 - (1/2)² = 3/4 = 75%.\n\nTotal: 5/9 x 3/4 = 15/36 = 5/12 = **41.67%**, i.e. **42%**.\n\nTwo things worth internalising: the Team Re-Roll belongs on the pass because that is where it buys the most (6/9 - 3/9 = 33.3 percentage points, versus 25 points for the catch), and a 'long shot' turn like this still comes off better than one turn in three - long shots in Blood Bowl are rarely as hopeless as they feel.",
+      "author": "demo",
+      "tolerance": 5
+    }
+  ]
+}

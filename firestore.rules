@@ -1,0 +1,37 @@
+rules_version = '2';
+
+// ============================================================
+//  Blood Bowl Puzzles — Firestore rules for the shared leaderboard
+//  Paste this into Firebase console → Firestore Database → Rules
+//  and press Publish.
+//
+//  Allowed : everyone may READ the leaderboard, anyone may CREATE a
+//            run document that has a plausible shape.
+//  Blocked : modifying or deleting existing results.
+//
+//  This is a casual fan project, so it is deliberately simple: there
+//  is no auth. If you ever care about cheating, add Firebase Auth
+//  (anonymous sign-in) and require request.auth != null.
+// ============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isPlausibleRun(d) {
+      return d.keys().hasOnly(['nick', 'accuracy', 'meanError', 'ciWidth', 'total', 'misses', 'puzzleSet', 'createdAt'])
+        && d.nick is string && d.nick.size() > 0 && d.nick.size() <= 32
+        && d.accuracy is number && d.accuracy >= 0 && d.accuracy <= 100
+        && d.meanError is number && d.meanError >= 0 && d.meanError <= 100
+        && d.total is int && d.total > 0 && d.total <= 1000
+        && d.misses is int && d.misses >= 0 && d.misses <= d.total
+        && d.puzzleSet is string && d.puzzleSet.size() <= 64
+        && (d.ciWidth == null || (d.ciWidth is number && d.ciWidth >= 0 && d.ciWidth <= 100));
+    }
+
+    match /runs/{runId} {
+      allow read: if true;
+      allow create: if isPlausibleRun(request.resource.data);
+      allow update, delete: if false;
+    }
+  }
+}

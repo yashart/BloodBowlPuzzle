@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How scoring works — Blood Bowl Puzzles</title>
+<meta name="description" content="How Blood Bowl Puzzles scores your guesses, what the 90% interval means, how to add puzzles and how to host the whole thing on GitHub Pages.">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="images/favicon.svg">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="guide">
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true">
+        <ellipse cx="16" cy="16" rx="10" ry="13" fill="#e8e2d4" stroke="#0d1015" stroke-width="2"/>
+        <path d="M16 6.5v19M11.5 11h9M11.5 16h9M11.5 21h9" stroke="#b03030" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span>Blood Bowl <b>Puzzles</b><small>how scoring works</small></span>
+    </a>
+    <nav class="nav">
+      <a href="index.html">Play</a>
+      <a href="guide.html" aria-current="page">How scoring works</a>
+      <a href="editor.html">Puzzle editor</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="card">
+    <h1>How scoring works</h1>
+    <p>Each puzzle gives you a situation, a legend of relevant skills, and one question: <b>what is the chance?</b>
+    You answer with a slider from 0 to 100%, press <b>Submit</b>, and immediately see the real number, how far off you were
+    and a worked solution.</p>
+    <ul>
+      <li><b>Hit / miss:</b> a guess within <b>±5 percentage points</b> of the true chance counts as a hit (a puzzle may set its own wider tolerance — the reveal always tells you which one applies). This tolerance exists because a slider cannot express values such as <code>74.07%</code> — without it, the puzzle would be unfair.</li>
+      <li><b>Error:</b> the absolute distance between your guess and the true answer, in percentage points (pp).</li>
+      <li><b>Accuracy:</b> hits ÷ puzzles, shown with a 90% Wilson confidence interval.</li>
+      <li><b>90% interval of your error:</b> a t-interval on your average miss distance. It answers "how precisely did this run measure my skill?" — repeat the run and about 9 of 10 such intervals would contain your true average error.</li>
+      <li><b>Leaderboard:</b> sorted by accuracy, then by smaller mean error. You may save your result anonymously or with a nickname.</li>
+    </ul>
+    <details class="help">
+      <summary>The formulas, because you are among friends</summary>
+      <p class="mono small">mean error = (1/n) · Σ |guessᵢ − answerᵢ|<br>
+      90% CI = mean ± t₀.₉₅,ₙ₋₁ · s / √n &nbsp;&nbsp;(s = sample standard deviation)<br>
+      accuracy CI (Wilson) = (p + z²/2n ± z·√(p(1−p)/n + z²/4n²)) / (1 + z²/n), with z = 1.645</p>
+      <p class="muted small">With a handful of puzzles these intervals are wide — that is the honest answer, not a bug.
+      Add more puzzles to the deck and the interval narrows.</p>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2>Hosting on GitHub Pages (5 minutes)</h2>
+    <ol>
+      <li>Create a repository, e.g. <code>blood-bowl-puzzles</code>, and push the contents of this folder to the <code>main</code> branch.</li>
+      <li>In the repository: <b>Settings → Pages</b> → Source: <i>Deploy from a branch</i> → Branch: <code>main</code>, folder: <code>/ (root)</code> → Save.</li>
+      <li>Wait a minute. The site appears at <code>https://&lt;your-login&gt;.github.io/blood-bowl-puzzles/</code>.</li>
+    </ol>
+    <p class="muted small">Naming the repository <code>&lt;your-login&gt;.github.io</code> publishes it at the bare domain instead.
+    Everything here is plain static files: no build step, no Node, no bundler.</p>
+    <p class="muted small">Heads-up: a module-based site like this one needs http(s). Opening <code>index.html</code> directly
+    from <code>file://</code> will not load <code>puzzles.json</code> — use GitHub Pages, or a local server such as
+    <code>python3 -m http.server 8000</code>.</p>
+  </div>
+
+  <div class="card">
+    <h2>Turning on the shared leaderboard (Firebase, free)</h2>
+    <ol>
+      <li>Go to <a href="https://console.firebase.google.com/">console.firebase.google.com</a> → <b>Add project</b> (Google Analytics can be skipped).</li>
+      <li>In the project: <b>Build → Firestore Database → Create database</b>. Pick a region and start in <i>production mode</i>.</li>
+      <li><b>Project settings → Your apps → Web (&lt;/&gt;)</b> → register an app. Copy the <code>firebaseConfig</code> object.</li>
+      <li>In this repository, copy <code>js/config.example.js</code> to <code>js/config.js</code> and paste your values in. Commit and push.</li>
+      <li>Paste the rules from <code>firestore.rules</code> into <b>Firestore → Rules</b> and publish. They allow reading the leaderboard,
+      adding a result of a plausible shape, and nothing else.</li>
+    </ol>
+    <div class="note small">Your <code>firebaseConfig</code> keys are not secret — they are meant to be public in web apps; the rules above are
+    what actually protects the data. Until <code>config.js</code> contains real values, the site quietly keeps the leaderboard
+    in <code>localStorage</code> for the player's own browser and says so in the header.</div>
+  </div>
+
+  <div class="card">
+    <h2>Adding puzzles</h2>
+    <ol>
+      <li>Open the <a href="editor.html">puzzle editor</a>, fill in the form, watch the JSON and the preview, then <b>Add to export</b>.</li>
+      <li>Press <b>Download puzzles.json</b>.</li>
+      <li>Put your pitch images into the <code>images/</code> folder and reference them as <code>images/your-file.png</code>.</li>
+      <li>Commit the new <code>puzzles.json</code> and images. The site picks them up on the next page load — no rebuild.</li>
+    </ol>
+    <p class="muted small">The deck order in the editor is the order the player sees. Deeper puzzles usually work better late in a run.</p>
+  </div>
+
+  <div class="card">
+    <h2>What each file does</h2>
+    <div class="table-wrap"><table class="board">
+      <thead><tr><th>File</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">index.html</td><td>The quiz: puzzle screen, slider, reveal, results, leaderboard.</td></tr>
+        <tr><td class="mono">editor.html</td><td>The puzzle authoring form with live JSON and preview.</td></tr>
+        <tr><td class="mono">puzzles.json</td><td>The deck itself. This is the only file you edit to add content.</td></tr>
+        <tr><td class="mono">js/app.js</td><td>Quiz flow and scoring.</td></tr>
+        <tr><td class="mono">js/engine.js</td><td>Markdown subset, statistics (t-interval, Wilson), puzzle loading and validation.</td></tr>
+        <tr><td class="mono">js/leaderboard.js</td><td>Firebase or localStorage leaderboard behind one API.</td></tr>
+        <tr><td class="mono">js/editor.js</td><td>Editor logic and export.</td></tr>
+        <tr><td class="mono">js/config.js</td><td>Your Firebase credentials (created locally, never committed in the repo template).</td></tr>
+        <tr><td class="mono">images/</td><td>Pitch artwork. The demo files are SVGs generated from coordinates, replace them freely.</td></tr>
+        <tr><td class="mono">site-src/</td><td>Optional Python helpers used to generate the demo content and to validate the deck.</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>Blood Bowl Puzzles — unofficial fan project. Blood Bowl is a trademark of Games Workshop.</span>
+    <span><a href="index.html">Play</a> · <a href="editor.html">Editor</a></span>
+  </div>
+</footer>
+</body>
+</html>

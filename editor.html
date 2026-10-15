@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Puzzle editor — Blood Bowl Puzzles</title>
+<meta name="description" content="Create new Blood Bowl puzzles as JSON with a live preview, then export puzzles.json for the site.">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="images/favicon.svg">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="editor">
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true">
+        <ellipse cx="16" cy="16" rx="10" ry="13" fill="#e8e2d4" stroke="#0d1015" stroke-width="2"/>
+        <path d="M16 6.5v19M11.5 11h9M11.5 16h9M11.5 21h9" stroke="#b03030" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span>Blood Bowl <b>Puzzles</b><small>puzzle editor</small></span>
+    </a>
+    <nav class="nav">
+      <a href="index.html">Play</a>
+      <a href="guide.html">How scoring works</a>
+      <a href="editor.html" aria-current="page">Puzzle editor</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="banner">
+    <div style="flex:1 1 340px">
+      <b>Workflow:</b> fill in the form → <b>Add to export</b> → <b>Download puzzles.json</b> → drop that file
+      (and your artwork into <code>images/</code>) into your GitHub repository. The live site reads <code>puzzles.json</code>
+      at startup, so no rebuild is needed.
+    </div>
+    <div class="btn-row">
+      <button id="btn-load-file" class="btn-sm">Load deployed puzzles.json</button>
+      <label class="btn btn-sm" style="display:inline-block">
+        Import JSON file…<input type="file" id="btn-import-file" accept=".json,application/json" hidden>
+      </label>
+    </div>
+  </div>
+
+  <div class="editor-grid">
+
+    <!-- ------------------------------------------------ form -->
+    <section class="card" id="form-card">
+      <div class="card-head">
+        <h1 style="margin:0">Puzzle</h1>
+        <div class="btn-row" style="margin-left:auto">
+          <button id="btn-new" class="btn-ghost btn-sm">New / clear</button>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="f-id">id <span class="hint">unique slug, e.g. bb2020-pickup-01</span></label>
+          <input type="text" id="f-id" placeholder="my-puzzle-01">
+        </div>
+        <div class="field">
+          <label for="f-difficulty">difficulty</label>
+          <select id="f-difficulty">
+            <option value="easy">easy</option>
+            <option value="medium" selected>medium</option>
+            <option value="hard">hard</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="f-title">title <span class="hint">shown above the conditions</span></label>
+        <input type="text" id="f-title" placeholder="The Loose Ball">
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="f-tags">tags <span class="hint">comma separated</span></label>
+          <input type="text" id="f-tags" placeholder="passing, catch, reroll">
+        </div>
+        <div class="field">
+          <label for="f-author">author</label>
+          <input type="text" id="f-author" placeholder="your nickname">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="f-image">image path <span class="hint">relative to the site root, e.g. images/puzzle-07.png</span></label>
+        <input type="text" id="f-image" placeholder="images/puzzle-07.png">
+      </div>
+      <div class="field">
+        <label for="f-imagealt">image alt text <span class="hint">for screen readers</span></label>
+        <input type="text" id="f-imagealt" placeholder="Pitch diagram: blitzer next to a loose ball">
+      </div>
+
+      <div class="field">
+        <label for="f-task">task / mission text <span class="hint">**bold**, `code`, "- " bullets and blank lines for paragraphs</span></label>
+        <textarea id="f-task" rows="7" placeholder="Turn 8 of the second half… The ball is loose next to your **Blitzer #1**…"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="f-question">question above the slider</label>
+        <input type="text" id="f-question" value="What are the odds? (%)">
+      </div>
+
+      <h3 style="margin-top:1rem">Conditions — who has what</h3>
+      <p class="muted small">One row per player or squad worth naming. Leave the skills field empty for "no relevant skills".</p>
+      <div class="legend-editor">
+        <div id="legend-rows"></div>
+        <button type="button" id="btn-add-legend" class="btn-sm">+ add player</button>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="f-answer">correct answer, % <span class="hint">integer 0–100</span></label>
+          <input type="number" id="f-answer" min="0" max="100" step="1" value="50">
+        </div>
+        <div class="field">
+          <label for="f-exact">exact value <span class="hint">optional, e.g. 3/4 = 75%</span></label>
+          <input type="text" id="f-exact" placeholder="3/4 = 75%">
+        </div>
+        <div class="field">
+          <label for="f-tolerance">tolerance, pp <span class="hint">how close counts as a hit (site default 5)</span></label>
+          <input type="number" id="f-tolerance" min="0" max="25" step="1" value="5">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="f-solution">solution text <span class="hint">shown only after the player submits</span></label>
+        <textarea id="f-solution" rows="9" placeholder="**Step 1 — pick the ball up.** AG 3+ with one tackle zone is a 4+ roll…"></textarea>
+      </div>
+
+      <div class="btn-row" style="margin-top:.4rem">
+        <button id="btn-add-deck" class="primary">Add to export</button>
+        <button id="btn-download-one">Download this puzzle only</button>
+        <button id="btn-copy" class="btn-ghost">Copy JSON</button>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------ right column -->
+    <section>
+      <div class="card">
+        <div class="card-head"><h2 style="margin:0">JSON</h2>
+          <span class="muted small" style="margin-left:auto">this is what gets pasted into puzzles.json</span>
+        </div>
+        <pre style="max-height:44vh"><code id="json-out" class="small"></code></pre>
+        <div id="json-status" class="status"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2 style="margin:0">Live preview</h2></div>
+        <div id="preview"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2 style="margin:0">Export</h2>
+          <span class="muted small" style="margin-left:auto" id="deck-source"></span>
+        </div>
+        <div id="deck"></div>
+        <div class="btn-row" style="margin-top:.8rem">
+          <button id="btn-download-deck" class="primary">Download puzzles.json</button>
+        </div>
+        <hr>
+        <h3>Bulk import</h3>
+        <p class="muted small">Paste a single puzzle object or a whole <code>{ "version": 1, "puzzles": [ … ] }</code> file.</p>
+        <div class="field">
+          <textarea id="paste-box" rows="4" placeholder='{"id":"my-puzzle-01", …}'></textarea>
+        </div>
+        <div class="btn-row"><button id="btn-import-paste" class="btn-sm">Import pasted JSON</button></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2 style="margin:0">Field reference</h2></div>
+        <div class="table-wrap"><table class="board">
+          <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">id</td><td>Unique slug. Also used to detect an unfinished run, so don't rename puzzles casually.</td></tr>
+            <tr><td class="mono">answer</td><td>Integer 0–100. The slider is 0–100% and a guess within ±5 pp counts as a hit.</td></tr>
+            <tr><td class="mono">task</td><td>The situation and the mission. Markdown subset is supported.</td></tr>
+            <tr><td class="mono">question</td><td>The line right above the slider, e.g. "What is the chance you knock the carrier down? (%)".</td></tr>
+            <tr><td class="mono">legend</td><td>Conditions: who has which skills in this puzzle.</td></tr>
+            <tr><td class="mono">solution</td><td>Full worked solution, revealed after submitting.</td></tr>
+            <tr><td class="mono">exact</td><td>Optional exact value shown next to the answer, e.g. <code>5/9 = 55.56%</code>.</td></tr>
+            <tr><td class="mono">image</td><td>Path relative to the site root. Use <code>images/your-file.png</code>.</td></tr>
+            <tr><td class="mono">tolerance</td><td>Optional per-puzzle tolerance in percentage points (default 5).</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>Blood Bowl Puzzles — unofficial fan project.</span>
+    <span><a href="index.html">Play the puzzles</a> · <a href="guide.html">Scoring &amp; maths</a></span>
+  </div>
+</footer>
+
+<script type="module" src="js/editor.js"></script>
+</body>
+</html>
