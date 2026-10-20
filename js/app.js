@@ -143,6 +143,24 @@ function progressHtml() {
     </div>`;
 }
 
+// One D6 roll, optionally rerolling a failure once.
+function rollHintHtml() {
+  const rows = [2, 3, 4, 5, 6].map(target => {
+    const success = (7 - target) / 6;
+    const withReroll = 1 - (1 - success) ** 2;
+    return `<tr><th scope="row">${target}+</th><td>${(success * 100).toFixed(1)}%</td><td>${(withReroll * 100).toFixed(1)}%</td></tr>`;
+  }).join('');
+  return `
+    <div class="roll-hint">
+      <table>
+        <caption>Hint — D6 success chances</caption>
+        <thead><tr><th scope="col">Roll</th><th scope="col">0rr</th><th scope="col">1rr</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <p class="muted small">0rr = no reroll · 1rr = reroll a failed roll once.</p>
+    </div>`;
+}
+
 function screenRun() {
   const n = state.puzzles.length;
   if (state.idx >= n) return screenResults();
@@ -170,6 +188,7 @@ function screenRun() {
               </div>
               <h3 class="zen-sub">Conditions — who has what</h3>
               ${legendHtml(p)}
+              ${rollHintHtml()}
             </div>
           </div>
         </div>
