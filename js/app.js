@@ -172,7 +172,7 @@ function oddsHtml(p) {
       </div>
       <label class="skip-odds">
         <input type="checkbox" id="odds-skip">
-        <span>Skip the odds <span class="muted small">(optional)</span></span>
+        <span>Skip the odds</span>
       </label>
     </div>`;
 }
@@ -212,7 +212,6 @@ function screenRun() {
         <div class="answer-box" id="answer-box">
           <div class="howto">
             <div class="question">How do you play it?</div>
-            <p class="muted small howto-hint">Press the buttons in the order you would do them.</p>
             <div class="action-grid" id="action-grid">${actionButtonsHtml(p)}</div>
             <div class="solution-draft">
               <div class="draft-head"><span>Your solution</span></div>
