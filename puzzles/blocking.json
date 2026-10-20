@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "meta": {
+    "count": 2,
+    "title": "puzzles/blocking.json"
+  },
+  "puzzles": [
+    {
+      "id": "base-puzzles-01",
+      "title": "Lineman and Mummy",
+      "difficulty": "medium",
+      "tags": [],
+      "image": "images/puzzle-01.png",
+      "imageAlt": "",
+      "task": "Score TD. **1 reroll** is available.",
+      "question": "What are the odds? (%)",
+      "legend": [
+        {
+          "name": "L - Lineman",
+          "skills": [
+            "Block"
+          ],
+          "note": "MA 6 ST 3 AG 3+",
+          "color": "blue"
+        },
+        {
+          "name": "M - Mummy",
+          "skills": [
+            "Block"
+          ],
+          "note": "MA 3 ST 5 AG 5+",
+          "color": "red"
+        }
+      ],
+      "answer": 79,
+      "exact": "",
+      "solution": "Blitz in Mummy, do not rr BD results. If not to knock down or push away - 4++ dodge",
+      "author": "WorldSitar, Akyama & neproxy, Rubbl Final",
+      "tolerance": 5
+    },
+    {
+      "id": "base-puzzles-04",
+      "title": "Kill the snot!",
+      "difficulty": "medium",
+      "tags": [],
+      "image": "images/puzzle-03.png",
+      "imageAlt": "",
+      "task": "KO or Injury this snot. **0 rr**.",
+      "question": "What are the odds? (%)",
+      "legend": [
+        {
+          "name": "B - Human Blitzer",
+          "skills": [
+            "Block",
+            "Tackle"
+          ],
+          "note": "MA 7 ST 3 AG 3+",
+          "color": "blue"
+        },
+        {
+          "name": "L - Snotling Lineman",
+          "skills": [
+            "Stunty",
+            "Titchy",
+            "Dodge",
+            "Sidestep"
+          ],
+          "note": "MA 5 ST 1 AG 3+ AV 6+",
+          "color": "red"
+        }
+      ],
+      "answer": 37,
+      "exact": "",
+      "solution": "87% to find BD, STUMBLE or POW, 72% to break armor, 58% to KO or injury",
+      "author": "mr_mesmer",
+      "tolerance": 5
+    }
+  ]
+}

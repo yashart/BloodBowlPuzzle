@@ -1,7 +1,7 @@
 /* ============================================================
-   app.js — the quiz itself: play each puzzle by pressing the
-   action buttons, optionally predict the odds, then see the
-   correct odds and the full solution. No win/lose verdict.
+   app.js — landing + quiz: browse categories/sets, then play
+   each puzzle by pressing action buttons, optionally predict
+   the odds, then see the correct odds and the full solution.
    ============================================================ */
 
 import {
@@ -19,11 +19,13 @@ const app = () => $('#app');
 const state = {
   puzzles: [],
   idx: 0,
-  answers: [],       // {guess, answer, error, steps}  (guess/error null when odds were skipped)
+  answers: [],
   runId: '',
   finished: false,
   submitted: null,
   savedProgress: null,
+  setFile: '',
+  setMeta: null,
 };
 
 /* ----------------------------------------------------------- storage */
@@ -50,15 +52,83 @@ function clearProgress() {
   try { localStorage.removeItem(PROGRESS_KEY + state.runId); } catch { /* ignore */ }
 }
 
+/* ----------------------------------------------------------- set param + sets manifest */
+
+function getSetFile() {
+  const sp = new URLSearchParams(location.search);
+  // support ?set=, ?puzzles=, ?deck=, ?file=
+  const raw = sp.get('set') || sp.get('puzzles') || sp.get('deck') || sp.get('file') || '';
+  const trimmed = String(raw).trim();
+  // sanitize: allow relative paths, but block absolute urls / protocol
+  if (!trimmed) return '';
+  if (/^(https?:)?\/\//i.test(trimmed) || /^[a-z]+:/i.test(trimmed)) return '';
+  if (trimmed.includes('..')) return '';
+  return trimmed;
+}
+
+async function loadSetsManifest() {
+  try {
+    const res = await fetch('sets.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (!json || !Array.isArray(json.categories)) throw new Error('Missing categories array');
+    return json;
+  } catch (e) {
+    return null;
+  }
+}
+
+function playUrl(file) {
+  return `play.html?set=${encodeURIComponent(file)}`;
+}
+
 /* ----------------------------------------------------------- boot */
 
 async function boot() {
   badge();
-  try {
-    state.puzzles = await loadPuzzles('puzzles.json');
-  } catch (err) {
-    return screenError('Cannot load puzzles.json', err.message);
+  const setFile = getSetFile();
+  const isPlayPage = document.body.dataset.page === 'play';
+
+  // A set requested on the landing page: hand over to the player page so the
+  // URL always says where you are (and old bookmarks keep working).
+  if (setFile && !isPlayPage) {
+    location.replace('play.html?' + new URLSearchParams({ set: setFile }).toString());
+    return;
   }
+  // play.html without a set falls back to the root puzzles.json
+  if (isPlayPage) {
+    return bootPlay(setFile || 'puzzles.json');
+  }
+  return bootLanding();
+}
+
+async function bootPlay(setFile) {
+  state.setFile = setFile;
+  document.body.dataset.page = 'play';
+  // hide landing header/footer chrome if present — we render zen chrome instead
+  const header = document.querySelector('.site-header');
+  const footer = document.querySelector('.site-footer');
+  if (header) header.style.display = 'none';
+  if (footer) footer.style.display = 'none';
+
+  try {
+    state.puzzles = await loadPuzzles(setFile);
+  } catch (err) {
+    return screenError(`Cannot load ${esc(setFile)}`, err.message, true);
+  }
+  // try to enrich setMeta from sets.json (optional)
+  try {
+    const manifest = await loadSetsManifest();
+    if (manifest) {
+      for (const cat of manifest.categories) {
+        for (const s of (cat.sets || [])) {
+          if (s.file === setFile) state.setMeta = s;
+        }
+      }
+    }
+  } catch { /* ignore */ }
+  if (!state.setMeta) state.setMeta = { title: setFile, file: setFile };
+
   state.runId = setId(state.puzzles);
 
   const saved = loadProgress(state.runId);
@@ -72,6 +142,35 @@ async function boot() {
   }
 }
 
+async function bootLanding() {
+  document.body.dataset.page = 'landing';
+  const header = document.querySelector('.site-header');
+  const footer = document.querySelector('.site-footer');
+  if (header) header.style.display = '';
+  if (footer) footer.style.display = '';
+
+  let manifest = await loadSetsManifest();
+  if (!manifest) {
+    // fallback minimal manifest if sets.json missing
+    manifest = {
+      title: 'Blood Bowl Puzzles',
+      subtitle: 'Pick a set and play. Each set is a puzzles.json deck.',
+      categories: [{
+        id: 'all',
+        title: 'All puzzles',
+        description: 'The default deck.',
+        sets: [{ id: 'default', title: 'Default deck', file: 'puzzles.json', description: 'The original puzzles.json', difficulty: 'mixed', count: null, tags: [] }],
+      }],
+    };
+  }
+
+  // Try to enrich counts by probing sets that have no count
+  // We don't fetch every set to avoid waterfall; counts from manifest are authoritative.
+  // But if count missing, we could show —; keep simple.
+
+  screenLanding(manifest);
+}
+
 function badge() {
   const el = $('#lb-badge');
   if (!el) return;
@@ -82,27 +181,155 @@ function badge() {
 
 /* ----------------------------------------------------------- screens */
 
-function screenError(title, message) {
+function screenError(title, message, isPlay = false) {
+  const back = isPlay ? `<a class="btn btn-ghost" href="index.html">← Back to all sets</a>` : '';
   app().innerHTML = `
     <div class="zen-page">
     <div class="card">
       <h1>⚠️ ${esc(title)}</h1>
       <div class="err-box small">${esc(message)}</div>
       <p class="muted small" style="margin-top:.8rem">
-        Checklist: <code>puzzles.json</code> must sit next to <code>index.html</code>;
+        Checklist: <code>${esc(state.setFile || 'puzzles.json')}</code> must exist next to <code>index.html</code>;
         the file must be valid JSON (run it through a JSON validator);
         and the page should be served over http(s) — browsers refuse to read local JSON from <code>file://</code>.
       </p>
-      <div class="btn-row"><button class="primary" onclick="location.reload()">Try again</button>
+      <div class="btn-row" style="margin-top:.8rem"><button class="primary" onclick="location.reload()">Try again</button>
+      ${back}
       <a class="btn btn-ghost" href="editor.html">Open the puzzle editor</a></div>
     </div>
     </div>`;
 }
 
+function difficultyChip(diff) {
+  const d = String(diff || '').toLowerCase();
+  if (['easy','medium','hard','mixed'].includes(d)) return `<span class="chip ${d}">${esc(d)}</span>`;
+  return d ? `<span class="chip tag">${esc(d)}</span>` : '';
+}
+
+/* ---------------- landing ---------------- */
+
+function setCardHtml(s, catId) {
+  const diffChip = difficultyChip(s.difficulty);
+  const countBadge = s.count != null ? `<span class="set-count">${esc(String(s.count))} puzzle${s.count === 1 ? '' : 's'}</span>` : '';
+  const tags = (s.tags || []).map(t => `<span class="chip tag">${esc(t)}</span>`).join('');
+  const cover = s.cover ? `<div class="set-cover"><img src="${esc(s.cover)}" alt="" loading="lazy"></div>` : '';
+  const fileLabel = `<span class="set-file mono">${esc(s.file)}</span>`;
+  // Two play links: primary to play.html, secondary raw JSON
+  return `
+    <article class="set-card" data-set="${esc(s.id)}" data-cat="${esc(catId)}">
+      ${cover}
+      <div class="set-card-top">
+        ${diffChip}
+        ${countBadge}
+      </div>
+      <h3 class="set-title">${esc(s.title)}</h3>
+      <p class="muted small set-desc">${esc(s.description || '')}</p>
+      ${tags ? `<div class="chips set-tags">${tags}</div>` : ''}
+      <div class="set-file-row">${fileLabel}</div>
+      <div class="btn-row set-actions">
+        <a class="btn primary" href="${esc(playUrl(s.file))}">Play →</a>
+        <a class="btn btn-ghost btn-sm" href="${esc(s.file)}" target="_blank" rel="noopener" title="Open the raw puzzles.json for this set">View JSON</a>
+      </div>
+    </article>`;
+}
+
+function categoryHtml(cat) {
+  const sets = (cat.sets || []).map(s => setCardHtml(s, cat.id)).join('');
+  const icon = cat.icon ? `<span class="cat-icon" aria-hidden="true">${esc(cat.icon)}</span>` : '';
+  return `
+    <section class="category" id="cat-${esc(cat.id)}">
+      <div class="category-head">
+        <div class="category-title-row">
+          ${icon}
+          <h2 class="category-title">${esc(cat.title)}</h2>
+          <span class="badge">${(cat.sets || []).length} set${(cat.sets||[]).length===1?'':'s'}</span>
+        </div>
+        ${cat.description ? `<p class="muted small category-desc">${esc(cat.description)}</p>` : ''}
+      </div>
+      <div class="set-grid">${sets || '<p class="muted small">No sets in this category yet.</p>'}</div>
+    </section>`;
+}
+
+function screenLanding(manifest) {
+  const totalSets = manifest.categories.reduce((n,c)=> n + (c.sets?.length||0), 0);
+  const totalPuzzles = manifest.categories.reduce((n,c)=> n + (c.sets||[]).reduce((m,s)=> m + (Number(s.count)||0), 0), 0);
+
+  const catsHtml = manifest.categories.map(categoryHtml).join('');
+
+  const heroStats = `
+    <div class="hero-stats">
+      <div class="stat"><b>${totalSets}</b><span>sets</span></div>
+      <div class="stat"><b>${manifest.categories.length}</b><span>categories</span></div>
+      <div class="stat"><b>${totalPuzzles || '—'}</b><span>puzzle runs</span></div>
+      <div class="stat"><b>${Leaderboard.isShared ? 'online' : 'local'}</b><span>leaderboard</span></div>
+    </div>`;
+
+  app().innerHTML = `
+    <div class="landing-hero">
+      <div class="landing-hero-badge"><span class="badge local">Blood Bowl</span> <span class="muted small">fan-made puzzle decks</span></div>
+      <h1 class="landing-title">${esc(manifest.title || 'Blood Bowl Puzzles')}</h1>
+      <p class="landing-subtitle">${esc(manifest.subtitle || 'Pick a puzzle set by category. Each card links directly to its puzzles.json deck.')}</p>
+      ${heroStats}
+      <div class="btn-row" style="margin-top:1rem">
+        <a class="btn primary" href="#cat-${esc(manifest.categories[0]?.id || 'all')}">Browse sets ↓</a>
+        <a class="btn btn-ghost" href="editor.html">Create a new set</a>
+        <a class="btn btn-ghost" href="guide.html">How it works</a>
+      </div>
+      <div class="landing-hint muted small" style="margin-top:1rem">
+        Each set is a standalone <code>puzzles.json</code> file. Click <b>Play</b> to start the quiz, or <b>View JSON</b> to inspect the deck.
+        Want to add your own? Duplicate <code>puzzles.json</code>, edit in the <a href="editor.html">editor</a>, and list it in <code>sets.json</code>.
+      </div>
+    </div>
+
+    <div class="landing-categories">
+      ${catsHtml}
+    </div>
+
+    <div class="card landing-foot">
+      <h2 style="margin-top:0">How to add a category</h2>
+      <p class="muted small">Edit <code>sets.json</code> at the project root. A category has a <code>title</code>, <code>description</code> and an array of <code>sets</code>. Each set needs at least <code>title</code> and <code>file</code> (path to its <code>puzzles.json</code>).</p>
+      <pre class="small" style="margin-top:.6rem"><code>{
+  "id": "my-cup",
+  "title": "My Tournament",
+  "description": "Puzzles from last weekend.",
+  "sets": [
+    {
+      "id": "round-1",
+      "title": "Round 1 — Bash",
+      "file": "puzzles/round-1.json",
+      "description": "2 puzzles, no rerolls.",
+      "difficulty": "hard",
+      "count": 2,
+      "tags": ["block"]
+    }
+  ]
+}</code></pre>
+      <div class="btn-row" style="margin-top:.8rem">
+        <a class="btn btn-ghost btn-sm" href="sets.json">Open sets.json</a>
+        <a class="btn btn-ghost btn-sm" href="puzzles.json">Open default puzzles.json</a>
+      </div>
+    </div>
+  `;
+
+  // smooth scroll for hero CTA
+  const firstCat = document.querySelector('.category');
+  if (firstCat) {
+    document.querySelector('.landing-hero a[href^=\"#cat-\"]')?.addEventListener('click', (e)=>{
+      e.preventDefault();
+      firstCat.scrollIntoView({ behavior:'smooth', block:'start' });
+    });
+  }
+}
+
 function screenResume(saved) {
   const n = state.puzzles.length;
+  const setLabel = state.setMeta ? esc(state.setMeta.title) : esc(state.setFile);
   app().innerHTML = `
     <div class="zen-page">
+      <div class="zen-back">
+        <a href="index.html" class="back-link">← All sets</a>
+        <span class="muted small" style="margin-left:.6rem">${setLabel} · ${esc(state.setFile)}</span>
+      </div>
       <div class="banner">
         <div style="flex:1 1 320px">
           <b>Unfinished run found.</b>
@@ -186,8 +413,16 @@ function screenRun() {
     ...p.tags.map(t => `<span class="chip tag">${esc(t)}</span>`),
   ].join('');
 
+  const setLabel = state.setMeta ? esc(state.setMeta.title) : esc(state.setFile);
+  const setFileLabel = esc(state.setFile);
+
   app().innerHTML = `
     <div class="zen">
+      <div class="zen-back">
+        <a href="index.html" class="back-link">← All sets</a>
+        <span class="badge" style="margin-left:.5rem">${setLabel}</span>
+        <span class="muted small mono" style="margin-left:.4rem; opacity:.7">${setFileLabel}</span>
+      </div>
       ${progressHtml()}
       <div class="zen-main">
         <div class="zen-sheet">
@@ -224,6 +459,7 @@ function screenRun() {
           </div>
           <div class="btn-row btn-center">
             <button class="link-btn" id="btn-restart" title="Clear this run and start again">Restart run</button>
+            <a class="link-btn" href="index.html">Change set</a>
           </div>
         </div>
         <div id="reveal"></div>
@@ -402,11 +638,17 @@ function screenResults() {
     ? `<div class="stat"><b>${fmtPct(s.meanError, 2)}</b><span>mean error${s.ci ? ' (90% CI ' + fmtPct(s.ci.lo, 1) + ' – ' + fmtPct(s.ci.hi, 1) + ')' : ''}</span></div>`
     : '';
 
+  const setLabel = state.setMeta ? esc(state.setMeta.title) : esc(state.setFile);
+
   app().innerHTML = `
     <div class="zen-page">
+      <div class="zen-back">
+        <a href="index.html" class="back-link">← All sets</a>
+        <span class="muted small" style="margin-left:.6rem">${setLabel}</span>
+      </div>
       <div class="results-head">
         <h1>Run finished</h1>
-        <p class="muted">Here are the correct odds and the full solution for every puzzle.</p>
+        <p class="muted">Here are the correct odds and the full solution for every puzzle in <b>${setLabel}</b>.</p>
       </div>
       <div class="stats-row">
         <div class="stat"><b>${s.played}</b><span>puzzles played</span></div>
@@ -421,6 +663,7 @@ function screenResults() {
 
       <div class="btn-row btn-center zen-actions">
         <button class="primary btn-lg" id="btn-again">Run again</button>
+        <a class="btn btn-ghost" href="index.html">Browse other sets</a>
       </div>
     </div>`;
 

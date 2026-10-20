@@ -1,6 +1,6 @@
 <h1 align="center">Blood Bowl Puzzles</h1>
-<p align="center">A static quiz site: read a Blood Bowl situation, build the play with the action buttons ("block 2d, dodge…"),
-and compare your answer with the correct play and — optionally — the real odds.</p>
+<p align="center">A static quiz site: pick a puzzle set by category, read a Blood Bowl situation, build the play with the action
+buttons ("block 2d, dodge…"), and compare your answer with the correct play and — optionally — the real odds.</p>
 
 ---
 
@@ -25,13 +25,64 @@ Every press appends that button's label to **Your solution**, so pressing *block
 At the end of the run there is a **recap** with the correct odds and the solution for every puzzle, plus how many
 puzzles were played and, if any odds were predicted, their mean error.
 
+## Landing page and sets
+
+`index.html` is a **landing page, not the quiz**. It renders `sets.json`, which groups decks into categories, and
+every card links to:
+
+* **Play** → `play.html?set=<path to that deck>`, the quiz itself,
+* **View JSON** → the raw `puzzles.json` file of that set, so the deck can be inspected or downloaded.
+
+Each set is a self-contained deck file in exactly the same format as the root `puzzles.json`
+(`{ "version": 1, "puzzles": [ … ] }` — a bare array works too). The demo catalogue ships with:
+
+```
+sets.json
+puzzles.json            the complete deck (every puzzle)
+puzzles/scoring.json    scoring plays
+puzzles/agility.json    dodging / Skaven
+puzzles/blocking.json   blocks, armour, injuries
+puzzles/easy.json       easy only
+puzzles/medium.json     medium only
+```
+
+To add a category or a set, edit `sets.json` — nothing else:
+
+```json
+{
+  "id": "my-cup",
+  "title": "My Tournament",
+  "description": "Puzzles from last weekend.",
+  "sets": [
+    {
+      "id": "round-1",
+      "title": "Round 1 — Bash",
+      "file": "puzzles/round-1.json",
+      "description": "Two puzzles, no rerolls.",
+      "difficulty": "hard",
+      "count": 2,
+      "tags": ["block"],
+      "cover": "images/puzzle-01.png"
+    }
+  ]
+}
+```
+
+`difficulty` is `easy` / `medium` / `hard` / `mixed`; `count`, `tags` and `cover` are optional decoration — the card
+always plays what the deck file actually contains. A set is also playable directly, without visiting the landing page:
+`play.html?set=puzzles/round-1.json`. `play.html` without `?set=` falls back to the root `puzzles.json`, and
+`index.html?set=…` simply redirects to `play.html?set=…`.
+
 ## Files
 
 ```
-index.html              the quiz
+index.html              landing page: categories → puzzle sets (reads sets.json)
+play.html               the quiz (?set=path/to/deck.json)
+sets.json               the catalogue rendered by the landing page
+puzzles/                themed decks, same format as puzzles.json
 editor.html             puzzle editor (form → live JSON → export)
 guide.html              how it works + hosting/Firebase instructions
-puzzles.json            the deck — the only content file you normally touch
+puzzles.json            the default deck — the only content file you normally touch
 css/style.css           all styling
 js/app.js               quiz flow: action buttons, optional odds, reveal, recap
 js/engine.js            markdown subset, action panel builders, statistics, puzzle loading/validation
@@ -85,12 +136,13 @@ there so GitHub serves the folders as-is.
 
 ## Adding puzzles
 
-Everything lives in `puzzles.json`. Author them in the browser:
+Add puzzles to whichever deck the landing page should offer — a file under `puzzles/`, or the root `puzzles.json`. Author them in the browser:
 
 1. Open `editor.html` (locally or on the deployed site).
 2. Fill the form, watch the JSON and the live preview on the right.
 3. **Add to export** for every puzzle — the deck order is the playing order.
-4. **Download puzzles.json** and commit it over the old one. Put new images into `images/`.
+4. **Download puzzles.json** and commit it over the old one (or into `puzzles/` as a new set, then list it in
+   `sets.json`). Put new images into `images/`.
 5. Reload the site: the new deck is live. No rebuild, no deploy step.
 
 A single puzzle looks like this:

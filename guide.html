@@ -21,7 +21,8 @@
       <span>Blood Bowl <b>Puzzles</b><small>how it works</small></span>
     </a>
     <nav class="nav">
-      <a href="index.html">Play</a>
+      <a href="index.html">Puzzle sets</a>
+      <a href="play.html">Play the default deck</a>
       <a href="guide.html" aria-current="page">How it works</a>
       <a href="editor.html">Puzzle editor</a>
     </nav>
@@ -83,6 +84,35 @@
   </div>
 
   <div class="card">
+    <h2>Adding a category or a set</h2>
+    <p>The landing page is driven by <code>sets.json</code>. A <b>category</b> has a title, a description and a list of
+    <b>sets</b>; every set points at its own <code>puzzles.json</code> file, and that is the file the <b>View JSON</b>
+    link on the card opens.</p>
+    <pre class="small"><code>{
+  "id": "my-cup",
+  "title": "My Tournament",
+  "description": "Puzzles from last weekend.",
+  "sets": [
+    {
+      "id": "round-1",
+      "title": "Round 1 — Bash",
+      "file": "puzzles/round-1.json",
+      "description": "Two puzzles, no rerolls.",
+      "difficulty": "hard",
+      "count": 2,
+      "tags": ["block"],
+      "cover": "images/puzzle-01.png"
+    }
+  ]
+}</code></pre>
+    <p class="small muted"><code>difficulty</code> is one of <code>easy</code>, <code>medium</code>, <code>hard</code>,
+    <code>mixed</code>. <code>count</code>, <code>tags</code> and <code>cover</code> are optional: the number is only a
+    label, the card always plays whatever the JSON file actually contains.</p>
+    <p class="small">A set is also playable directly, without the landing page:
+    <code>play.html?set=puzzles/round-1.json</code>. Links are relative, so this works just as well on GitHub Pages.</p>
+  </div>
+
+  <div class="card">
     <h2>Adding puzzles</h2>
     <ol>
       <li>Open the <a href="editor.html">puzzle editor</a>, fill in the form, watch the JSON and the preview, then <b>Add to export</b>.</li>
@@ -98,9 +128,12 @@
     <div class="table-wrap"><table class="board">
       <thead><tr><th>File</th><th>Role</th></tr></thead>
       <tbody>
-        <tr><td class="mono">index.html</td><td>The quiz: puzzle screen, action panel, optional odds slider, reveal, recap.</td></tr>
+        <tr><td class="mono">index.html</td><td>The landing page: puzzle sets grouped by category, each linking to its own <code>puzzles.json</code>.</td></tr>
+        <tr><td class="mono">play.html</td><td>The quiz: puzzle screen, action panel, optional odds slider, reveal, recap. Reads <code>?set=path/to/puzzles.json</code>.</td></tr>
+        <tr><td class="mono">sets.json</td><td>The catalogue the landing page renders: categories and the sets (deck files) inside each.</td></tr>
+        <tr><td class="mono">puzzles/</td><td>Themed decks, e.g. <code>puzzles/scoring.json</code> — just more <code>puzzles.json</code> files.</td></tr>
         <tr><td class="mono">editor.html</td><td>The puzzle authoring form with live JSON and preview.</td></tr>
-        <tr><td class="mono">puzzles.json</td><td>The deck itself. This is the only file you edit to add content.</td></tr>
+        <tr><td class="mono">puzzles.json</td><td>The default deck, and the one <code>play.html</code> falls back to without <code>?set=</code>.</td></tr>
         <tr><td class="mono">js/app.js</td><td>Quiz flow: action buttons, optional odds, reveal and recap.</td></tr>
         <tr><td class="mono">js/engine.js</td><td>Markdown subset, statistics (t-interval, Wilson), puzzle loading and validation.</td></tr>
         <tr><td class="mono">js/leaderboard.js</td><td>Firebase or localStorage leaderboard behind one API.</td></tr>

@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "meta": {
+    "count": 2,
+    "title": "puzzles/agility.json"
+  },
+  "puzzles": [
+    {
+      "id": "base-puzzles-02",
+      "title": "Gutter and Skitter",
+      "difficulty": "medium",
+      "tags": [],
+      "image": "images/puzzle-02.png",
+      "imageAlt": "",
+      "task": "Score the TD. **1 rr** is available.",
+      "question": "What are the odds? (%)",
+      "legend": [
+        {
+          "name": "G - gutter runner",
+          "skills": [
+            "Dodge",
+            "Stab",
+            "Two Heads"
+          ],
+          "note": "MA 9 ST 2 AG 2+",
+          "color": "blue"
+        },
+        {
+          "name": "SS - Skitter Stab Stab",
+          "skills": [
+            "Dodge",
+            "Stab",
+            "Loner (4+)"
+          ],
+          "note": "MA 9 ST 2 AG 2+",
+          "color": "blue"
+        },
+        {
+          "name": "B - Chaos Warrior",
+          "skills": [],
+          "note": "MA 5 ST 4 AG 3+ AV 10+",
+          "color": "red"
+        }
+      ],
+      "answer": 92,
+      "exact": "",
+      "solution": "**Best option** - is move through 3 tackle zones, rather than handoff loner 4+",
+      "author": "mr_mesmer",
+      "tolerance": 5
+    },
+    {
+      "id": "base-puzzles-03",
+      "title": "Gutter and Skitter Part 2",
+      "difficulty": "medium",
+      "tags": [],
+      "image": "images/puzzle-02.png",
+      "imageAlt": "",
+      "task": "Score the TD. The same as previous, but **0 rr** is available.",
+      "question": "What are the odds? (%)",
+      "legend": [
+        {
+          "name": "G - gutter runner",
+          "skills": [
+            "Dodge",
+            "Stab",
+            "Two Heads"
+          ],
+          "note": "MA 9 ST 2 AG 2+",
+          "color": "blue"
+        },
+        {
+          "name": "SS - Skitter Stab Stab",
+          "skills": [
+            "Dodge",
+            "Stab",
+            "Loner (4+)"
+          ],
+          "note": "MA 9 ST 2 AG 2+",
+          "color": "blue"
+        },
+        {
+          "name": "B - Chaos Warrior",
+          "skills": [],
+          "note": "MA 5 ST 4 AG 3+ AV 10+",
+          "color": "red"
+        }
+      ],
+      "answer": 87,
+      "exact": "",
+      "solution": "Move through 3 tackle zones with dodge still better, than 2+ handoff",
+      "author": "mr_mesmer",
+      "tolerance": 5
+    }
+  ]
+}
