@@ -88,7 +88,8 @@
       "exact": "",
       "solution": "**Best option** - is move through 3 tackle zones, rather than handoff loner 4+",
       "author": "mr_mesmer",
-      "tolerance": 5
+      "tolerance": 5,
+      "calc": "D:D2,D2,D2"
     },
     {
       "id": "base-puzzles-03",
@@ -131,7 +132,8 @@
       "exact": "",
       "solution": "Move through 3 tackle zones with dodge still better, than 2+ handoff",
       "author": "mr_mesmer",
-      "tolerance": 5
+      "tolerance": 5,
+      "calc": "D:D2,D2,D2"
     },
     {
       "id": "base-puzzles-01",
@@ -201,7 +203,8 @@
       "exact": "",
       "solution": "87% to find BD, STUMBLE or POW, 72% to break armor, 58% to KO or injury",
       "author": "mr_mesmer",
-      "tolerance": 5
+      "tolerance": 5,
+      "calc": "3D3,K6,J7"
     }
   ]
 }

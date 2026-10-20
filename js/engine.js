@@ -197,6 +197,7 @@ export function normalizePuzzle(p, i = 0) {
     solution: String(p.solution ?? ''),
     author: String(p.author ?? ''),
     tolerance: isFinite(Number(p.tolerance)) ? Number(p.tolerance) : 5,
+    calc: String(p.calc ?? '').trim(),
   };
 }
 
@@ -249,6 +250,114 @@ export function legendHtml(p) {
     </li>`;
   }).join('');
   return `<ul class="legend">${rows}</ul>`;
+}
+
+/* ----------------------------------------------------------- Dave's calculator
+
+   Every puzzle page carries a small box for Dave's Advanced Action Calculator
+   (https://www.bloodbowldave.com/advanced). That page accepts a "calculation
+   string" in its text field and also via the ?c= URL parameter, so a line typed
+   here can be opened there with one click. The notation below is documented in
+   the calculator's own repository (BloodBowlDave/BloodBowlActionCalculator):
+   actions per player separated by ",", players separated by ";", skills as a
+   prefix before ":", blocks as <dice>D<good faces>[!<safe faces>].
+*/
+
+export const CALC_BASE_URL = 'https://www.bloodbowldave.com/advanced';
+
+/** Builds the deep link for a calculation string. A pasted full URL passes through. */
+export function calcUrl(str) {
+  const s = String(str ?? '').trim();
+  if (!s) return CALC_BASE_URL;
+  if (/^https?:\/\//i.test(s)) return s;
+  return CALC_BASE_URL + '?c=' + encodeURIComponent(s);
+}
+
+/** Clickable samples shown in the puzzle-page calculator box. */
+export const CALC_EXAMPLES = [
+  { code: 'D3,P3,C3',           text: 'dodge 3+, pass 3+, catch 3+ — one player' },
+  { code: '2D2,K8,J8',          text: 'two-dice block for the knockdown, armour 8+, injury 8+' },
+  { code: 'D,SF,L4:D4,D4',      text: 'loner (4+) with Dodge + Sure Feet: two 4+ dodges' },
+  { code: 'P3;C:C3',            text: 'pass 3+, then (;) a second player catches 3+' },
+  { code: '2D2!2{1D2}',         text: 'frenzy: a 1-die follow-up block on each push' },
+  { code: 'L2,2D2|1D2',         text: 'dauntless 2+: 2-dice block if made, 1 die if missed' },
+];
+
+/** The compact notation cheat-sheet used inside the puzzle-page calculator box. */
+export function calcCheatSheetHtml() {
+  return `
+    <p class="small"><b>The line.</b> One player's actions in order, separated by commas:
+      <code>D3</code> dodge 3+, <code>R3</code> rush, <code>U3</code> pick up, <code>P3</code> pass
+      (<code>P3-1</code> = with a −1 modifier), <code>C3</code> catch, <code>E3</code> leap,
+      <code>G5</code> landing, <code>T2</code> stab, <code>K8</code> armour 8+, <code>J8</code> injury 8+,
+      <code>F8</code> foul to break armour 8+, a bare <code>4</code> = any rerollable 4+ roll,
+      <code>5/6</code> = a fixed 5-in-6 chance that cannot be rerolled.</p>
+    <p class="small"><b>Blocks.</b> <code>&lt;dice&gt;D&lt;good faces&gt;</code> counts the best faces of the block die
+      (defender down first, then pushes): <code>1D2</code> = one die for a knockdown,
+      <code>2D2</code> = two dice for a knockdown, <code>2D3</code> = two dice for push-or-better,
+      <code>3D1</code> = three dice for POW only. <code>!n</code> marks n faces as
+      "safe but not a success" — <code>2D2!2{1D2}</code> is a frenzy block whose pushes trigger the
+      branch in <code>{…}</code>. Modifiers: <code>^</code> Brawler, <code>*</code> Pro, <code>%</code> Hatred.</p>
+    <p class="small"><b>Skills &amp; more players.</b> Skills go before a colon —
+      <code>D,SF:D3</code> dodges 3+ with Dodge and Sure Feet, <code>L4:2D2</code> is a loner (4+) blocking.
+      <code>;</code> switches to the next player: <code>P3;C:C3</code> = the thrower passes, the catcher catches.</p>
+    <p class="small"><b>Branches.</b> <code>{…}</code> = what happens if the roll before it did not fail
+      (frenzy follow-ups), <code>[…]</code> = a branch that ends the calculation (scoring on the way),
+      <code>(a)(b)</code> = two alternative lines — the best one counts,
+      <code>L2,2D2|1D2</code> = dauntless 2+ into a 2-dice block, or a 1-die block if it is missed.
+      Suffix <code>~S2</code> switches the calculator to Season 2 rules.</p>
+    <p class="small"><b>Rerolls.</b> The calculator lists the success chance for 0, 1, 2 … team rerolls —
+      read the row that matches the rerolls this puzzle gives you. Skills such as Dodge, Catch, Pass or
+      Pro are spent automatically where they help.</p>`;
+}
+
+/**
+ * The calculator box shown under every puzzle: a text field for the calculation
+ * string, an "open" link that carries it to Dave's advanced page via ?c=, the
+ * cheat-sheet and clickable samples. Wiring (input → href sync, chips) is done
+ * by app.js after the panel is inserted.
+ */
+export function calcPanelHtml(p) {
+  const seed = String(p?.calc ?? '').trim();
+  return `
+    <details class="calc-box" id="calc-box">
+      <summary>🧮 Odds calculator — type the line, check it with Dave's calculator</summary>
+      <div class="calc-body">
+        <p class="muted small">Write this turn as a calculation string and open it in
+          <a href="${CALC_BASE_URL}" target="_blank" rel="noopener">Dave's Advanced Action Calculator</a> —
+          it returns the exact chance the whole line works. The string travels in the link
+          (<code>?c=…</code>), so anything you build can be shared or bookmarked.</p>
+        <div class="calc-row">
+          <input type="text" id="calc-input" class="mono" spellcheck="false" autocomplete="off"
+            aria-label="Calculation string for Dave's advanced action calculator"
+            placeholder="e.g. D3,2D2,K8,J8" value="${esc(seed)}">
+          <a class="btn btn-sm" id="calc-open" href="${calcUrl(seed)}" target="_blank" rel="noopener"
+            title="Open this calculation in Dave's advanced calculator">Open ↗</a>
+        </div>
+        <details class="help calc-help">
+          <summary>Notation help &amp; samples</summary>
+          ${calcCheatSheetHtml()}
+          <div class="calc-chips">
+            ${CALC_EXAMPLES.map(x => `
+              <button type="button" class="calc-chip" data-calc="${esc(x.code)}">
+                <code>${esc(x.code)}</code><span class="lbl">${esc(x.text)}</span>
+              </button>`).join('')}
+          </div>
+          <p class="muted small">Click a sample to put it in the field, edit it, then press <b>Open ↗</b>.
+          The full reference lives in <a href="guide.html#calculator">the guide</a>.</p>
+        </details>
+      </div>
+    </details>`;
+}
+
+/** One-line "verify this in the calculator" row, used in the reveal/solution. */
+export function calcLineHtml(code) {
+  return `
+    <p class="calc-line">
+      <span class="muted small">Dave's calculator:</span>
+      <code>${esc(code)}</code>
+      <a class="btn btn-sm" href="${calcUrl(code)}" target="_blank" rel="noopener">Open ↗</a>
+    </p>`;
 }
 
 export function toast(message, ms = 2400) {

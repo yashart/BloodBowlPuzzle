@@ -5,7 +5,7 @@
 
 import {
   esc, md, toast, normalizePuzzle, normalizeCollection, legendHtml,
-  legendColor, legendColorOptions,
+  legendColor, legendColorOptions, calcUrl,
 } from './engine.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -22,7 +22,7 @@ function blankPuzzle() {
     image: '', imageAlt: '',
     task: '', question: 'What are the odds? (%)',
     legend: [{ name: '', skills: [], note: '', color: '' }],
-    answer: 50, exact: '', solution: '', author: '', tolerance: 5,
+    answer: 50, exact: '', solution: '', author: '', tolerance: 5, calc: '',
   };
 }
 
@@ -70,6 +70,7 @@ function readForm() {
     solution: $('#f-solution').value.trim(),
     author: $('#f-author').value.trim(),
     tolerance: Number($('#f-tolerance').value || 5),
+    calc: $('#f-calc').value.trim(),
   };
 }
 
@@ -87,6 +88,7 @@ function writeForm(p) {
   $('#f-solution').value = p.solution || '';
   $('#f-author').value = p.author || '';
   $('#f-tolerance').value = p.tolerance ?? 5;
+  $('#f-calc').value = p.calc || '';
   renderLegendRows(p.legend);
   refresh();
 }
@@ -151,7 +153,9 @@ function refresh() {
     <div style="margin-top:.6rem">${legendHtml({ legend: p.legend || [] })}</div>
     <p class="small muted" style="margin-top:.6rem">${esc(p.question || '')}
       → answer <b>${isFinite(p.answer) ? esc(String(p.answer)) + '%' : '—'}</b>
-      ${p.exact ? ` <code>${esc(p.exact)}</code>` : ''} · tolerance for the "correct" badge in this preview: ±${esc(String(p.tolerance ?? 5))} pp</p>`;
+      ${p.exact ? ` <code>${esc(p.exact)}</code>` : ''} · tolerance for the "correct" badge in this preview: ±${esc(String(p.tolerance ?? 5))} pp</p>
+    ${p.calc ? `<p class="small muted" style="margin-top:.4rem">Calculator line: <code>${esc(p.calc)}</code> →
+      <a href="${calcUrl(p.calc)}" target="_blank" rel="noopener">open in Dave's calculator ↗</a></p>` : ''}`;
 }
 
 /* ----------------------------------------------------------- deck */

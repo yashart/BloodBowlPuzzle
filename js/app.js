@@ -6,6 +6,7 @@
 import {
   loadPuzzles, md, esc, fmtPct, fmtNum, fmtDate, setId, mean,
   puzzleMediaHtml, legendHtml, tInterval90, wilson, toast,
+  calcPanelHtml, calcLineHtml, calcUrl,
 } from './engine.js';
 import { Leaderboard, cleanNick } from './leaderboard.js';
 
@@ -192,6 +193,7 @@ function screenRun() {
           </div>
         </div>
         <div id="reveal"></div>
+        ${calcPanelHtml(p)}
       </div>
     </div>`;
 
@@ -203,6 +205,7 @@ function screenRun() {
   };
   slider.addEventListener('input', paint);
   paint();
+  wireCalcPanel();
 
   $('#btn-submit').addEventListener('click', () => reveal(Number(slider.value)));
   slider.addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-submit').click(); });
@@ -212,6 +215,43 @@ function screenRun() {
     state.idx = 0; state.answers = []; state.finished = false; state.submitted = null;
     screenRun();
   });
+}
+
+/* ----------------------------------------------------------- calculator box */
+
+/** Keeps the "Open ↗" link in sync with the calculation field and wires the
+ *  clickable samples. Re-run for every puzzle screen. */
+function wireCalcPanel() {
+  const input = $('#calc-input');
+  const open = $('#calc-open');
+  if (!input || !open) return;
+
+  const sync = () => { open.href = calcUrl(input.value); };
+  input.addEventListener('input', sync);
+  input.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    window.open(calcUrl(input.value), '_blank', 'noopener');
+  });
+  sync();
+
+  document.querySelectorAll('.calc-chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      input.value = chip.dataset.calc || '';
+      sync();
+      input.focus();
+    });
+  });
+}
+
+/** After the reveal, hand the author's own line (if the puzzle ships one) to
+ *  the calculator box so it can be inspected and tweaked. */
+function seedCalcPanel(code) {
+  const input = $('#calc-input');
+  const open = $('#calc-open');
+  if (!input || !open || !code) return;
+  input.value = code;
+  open.href = calcUrl(code);
 }
 
 /* ----------------------------------------------------------- answer + reveal */
@@ -248,6 +288,7 @@ function reveal(guess) {
         <div class="solution">
           <h3>Solution</h3>
           ${md(p.solution) || '<p class="muted">No solution text was written for this puzzle yet.</p>'}
+          ${p.calc ? calcLineHtml(p.calc) : ''}
         </div>
         <div class="next-row btn-center">
           <span class="muted small">${last ? 'That was the last puzzle.' : `Next up: <b>${esc(state.puzzles[state.idx].title)}</b>`}</span>
@@ -263,6 +304,7 @@ function reveal(guess) {
     else screenRun();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
+  seedCalcPanel(p.calc);
   $('#reveal').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 

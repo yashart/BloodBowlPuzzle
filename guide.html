@@ -51,6 +51,92 @@
     </details>
   </div>
 
+  <div class="card" id="calculator">
+    <h2>Checking the odds — Dave's Action Calculator</h2>
+    <p>Every puzzle page has a <b>🧮 Odds calculator</b> box: type the turn as a <b>calculation string</b> and press
+    <b>Open ↗</b> to get the exact success chance from
+    <a href="https://www.bloodbowldave.com/advanced" target="_blank" rel="noopener">Dave's Advanced Action Calculator</a>
+    (the string travels in the link as <code>?c=…</code>, so anything you build is shareable and bookmarkable).
+    The calculator answers one question — <i>what is the chance this whole line works?</i> — and lists it for
+    <b>0, 1, 2 … team rerolls</b>; read the row that matches the rerolls the puzzle gives you. Skills such as
+    Dodge, Sure Feet, Catch, Pass or Pro are spent automatically where they help.</p>
+
+    <h3>The line</h3>
+    <p>Actions of one player, in order, separated by commas. A letter plus the target number; a bare number is a
+    generic rerollable roll, and <code>n/m</code> is a fixed chance that cannot be rerolled.</p>
+    <div class="table-wrap"><table class="board">
+      <thead><tr><th>Token</th><th>Action</th><th>Token</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">D3</td><td>dodge 3+</td><td class="mono">K8</td><td>armour roll 8+</td></tr>
+        <tr><td class="mono">R3</td><td>rush (go for it) 3+</td><td class="mono">J8</td><td>injury roll 8+</td></tr>
+        <tr><td class="mono">U3</td><td>pick up 3+</td><td class="mono">F8</td><td>foul to break armour 8+</td></tr>
+        <tr><td class="mono">P3</td><td>pass 3+ (<code>P3-1</code> = with a −1 modifier)</td><td class="mono">T2</td><td>stab 2+</td></tr>
+        <tr><td class="mono">C3</td><td>catch 3+</td><td class="mono">W8</td><td>chainsaw 8+</td></tr>
+        <tr><td class="mono">E3</td><td>leap 3+</td><td class="mono">H4-1</td><td>throw teammate 4+ with −1</td></tr>
+        <tr><td class="mono">G5</td><td>landing 5+</td><td class="mono">M2</td><td>hail mary pass 2+</td></tr>
+        <tr><td class="mono">S+2</td><td>shadowing at +2</td><td class="mono">N+3</td><td>tentacles at +3</td></tr>
+        <tr><td class="mono">I6</td><td>interception 6+</td><td class="mono">Y3</td><td>hypnotic gaze 3+</td></tr>
+        <tr><td class="mono">L2</td><td>dauntless 2+</td><td class="mono">A6</td><td>argue the call 6+</td></tr>
+        <tr><td class="mono">B</td><td>bribe</td><td class="mono">4</td><td>any rerollable 4+ roll</td></tr>
+        <tr><td class="mono">2D3</td><td>block (see below)</td><td class="mono">5/6</td><td>fixed 5-in-6, not rerollable</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Blocks</h3>
+    <p><code>&lt;dice&gt;D&lt;good faces&gt;</code> — dice = 1, 2 or 3 (negative <code>-2</code>/<code>-3</code> when the
+    defender chooses the die), good faces = how many of the block die's faces count as success, best first
+    (defender down, then the pushes, then both down, then the skull):
+    <code>1D2</code> = one die for a knockdown, <code>2D2</code> = two dice for a knockdown,
+    <code>2D3</code> = two dice for push-or-better, <code>3D1</code> = three dice for POW only,
+    <code>1D5</code> = one die for anything but the skull (a blocker's view of both down).
+    <code>!n</code> marks the n faces below the good ones as "safe but not a success" — that is how frenzy
+    follow-ups are written: <code>2D2!2{1D2}</code> = a 2-dice block for the knockdown whose pushes trigger the
+    branch in <code>{…}</code>. Modifiers: <code>^</code> Brawler, <code>*</code> Pro, <code>%</code> Hatred,
+    <code>'</code> do not reroll the safe-but-not-success faces.</p>
+
+    <h3>Skills and more players</h3>
+    <p>Skills go in front of the actions, before a colon: <code>D,SF:D3</code> = dodge 3+ with Dodge and Sure Feet,
+    <code>L4:2D2</code> = a loner (4+) player blocking, <code>MB2:2D3,K8</code> = mighty blow (+2) into the armour roll.
+    Common codes: <code>D</code> Dodge, <code>BT2</code> Break Tackle 2+, <code>SH</code> Sure Hands,
+    <code>SF</code> Sure Feet, <code>PA</code> Pass, <code>C</code> Catch, <code>DC</code> Diving Catch,
+    <code>B</code> Brawler, <code>CL</code> Claw, <code>MB1</code> Mighty Blow, <code>P</code> Pro,
+    <code>L4</code> Loner 4+, <code>DP1</code> Dirty Player, <code>SG</code> Sneaky Git.
+    A <code>;</code> switches to the next player: <code>P3;C:C3</code> = the thrower passes 3+, then the catcher
+    (Catch) catches 3+. Star players are addressed by short name, e.g. <code>Morg:2D2,H5;G4</code>.</p>
+
+    <h3>Branches</h3>
+    <ul>
+      <li><code>{…}</code> — what happens if the action before it did not fail critically (frenzy follow-up blocks).</li>
+      <li><code>[…]</code> — a branch that ends the calculation, e.g. scoring the touchdown on the way.</li>
+      <li><code>(a)(b)</code> — alternative lines, e.g. two routes; the calculator picks the best plan.</li>
+      <li><code>|</code> — the dauntless split: <code>L2,2D2|1D2</code> = dauntless 2+, then a 2-dice block if it is
+        made or a 1-die block if it is missed.</li>
+      <li><code>~S2</code> — suffix that switches the whole calculation to Season 2 rules.</li>
+    </ul>
+
+    <h3>Worked samples</h3>
+    <ul>
+      <li><a href="https://www.bloodbowldave.com/advanced?c=D%3AD2%2CD2%2CD2" target="_blank" rel="noopener"><code>D:D2,D2,D2</code></a>
+        — sprint through three tackle zones: three 2+ dodges with the Dodge skill. Row 0 = no team reroll left,
+        row 1 = one reroll in the bank.</li>
+      <li><a href="https://www.bloodbowldave.com/advanced?c=3D3%2CK6%2CJ7" target="_blank" rel="noopener"><code>3D3,K6,J7</code></a>
+        — a 3-dice block that puts the victim down (87.5%), armour 6+ (72%), injury 7+ for the KO or casualty (58%):
+        about 37% end to end.</li>
+      <li><a href="https://www.bloodbowldave.com/advanced?c=SH%2CPA%3AP3%3BC%2CDC%3AC3" target="_blank" rel="noopener"><code>SH,PA:P3;C,DC:C3</code></a>
+        — a thrower with Sure Hands and Pass throws a 3+, a teammate with Catch and Diving Catch takes it on 3+.</li>
+      <li><a href="https://www.bloodbowldave.com/advanced?c=2D2!2%7B1D2%7D" target="_blank" rel="noopener"><code>2D2!2{1D2}</code></a>
+        — frenzy: the pushes of the first block trigger a 1-die follow-up.</li>
+      <li><a href="https://www.bloodbowldave.com/advanced?c=D%2CSF%2CL4%3AD4%2CD4" target="_blank" rel="noopener"><code>D,SF,L4:D4,D4</code></a>
+        — a loner (4+) with Dodge and Sure Feet dodging twice at 4+.</li>
+      <li><a href="https://www.bloodbowldave.com/advanced?c=P4-2%3BC2" target="_blank" rel="noopener"><code>P4-2;C2</code></a>
+        — a long pass (4+ with a −2 modifier) caught on 2+ by the next player.</li>
+    </ul>
+    <div class="note small">Puzzle authors: a puzzle may carry its own line in the <code>calc</code> field
+    (see the editor). Players see it together with the solution after submitting, and it is dropped into the
+    puzzle page's calculator box so it can be inspected and edited. The in-game cheat-sheet lives in the
+    calculator box under <b>Notation help &amp; samples</b>.</div>
+  </div>
+
   <div class="card">
     <h2>Hosting on GitHub Pages (5 minutes)</h2>
     <ol>

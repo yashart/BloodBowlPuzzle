@@ -7,11 +7,15 @@ gut feeling really is. Finishes with a 90% interval on your error and a place on
 ## What it does
 
 For every puzzle the player gets a pitch image, the mission text ("score the touchdown"), a **legend of who has which
-skills in this puzzle**, and a slider from 0 to 100%. After pressing **Submit** they get:
+skills in this puzzle**, a slider from 0 to 100% and a **🧮 odds-calculator box**: a text field for the compact
+notation of [Dave's Advanced Action Calculator](https://www.bloodbowldave.com/advanced), a one-click deep link into
+it (the line travels in the URL as `?c=…`), a built-in notation cheat-sheet and clickable samples.
+After pressing **Submit** they get:
 
 * the correct answer (plus an exact value such as `5/9 = 55.56%` when that matters),
 * their own answer and the miss distance in percentage points,
-* the full worked solution,
+* the full worked solution — plus the author's own calculator line (the puzzle's `calc` field) when it ships one,
+  dropped into the calculator box so it can be inspected and edited,
 * a **Next puzzle** button.
 
 At the end of the run:
@@ -27,7 +31,7 @@ At the end of the run:
 ```
 index.html              the quiz
 editor.html             puzzle editor (form → live JSON → export)
-guide.html              scoring maths + hosting/Firebase instructions
+guide.html              scoring maths + calculator notation reference + hosting/Firebase instructions
 puzzles.json            the deck — the only content file you normally touch
 css/style.css           all styling
 js/app.js               quiz flow, scoring, results screen

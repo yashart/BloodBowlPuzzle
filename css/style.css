@@ -415,3 +415,43 @@ textarea { min-height: 96px; resize: vertical; font-family: var(--mono); font-si
 details.help { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: .6rem .8rem; background: rgba(255, 255, 255, .02); }
 details.help summary { cursor: pointer; font-weight: 700; }
 details.help[open] summary { margin-bottom: .6rem; }
+
+/* ----------------------------------------------------------- calculator box (play page) */
+
+.calc-box {
+  width: min(680px, 100%);
+  margin: 1.1rem auto 0;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, .02);
+  padding: .6rem .85rem .75rem;
+  text-align: left;
+}
+.calc-box > summary { cursor: pointer; font-weight: 700; font-size: .94rem; }
+.calc-box > summary:hover { color: #fff; }
+.calc-box[open] > summary { margin-bottom: .55rem; }
+.calc-body p { margin-bottom: .55rem; }
+.calc-row { display: flex; gap: .5rem; align-items: stretch; margin: .1rem 0 .65rem; }
+.calc-row input {
+  flex: 1; min-width: 0;
+  font-family: var(--mono); font-size: .92rem; letter-spacing: .01em;
+}
+.calc-row .btn { flex: none; display: inline-flex; align-items: center; }
+.calc-help { margin-top: .1rem; }
+.calc-help summary { font-size: .88rem; }
+.calc-chips { display: grid; gap: .35rem; margin: .35rem 0 .6rem; }
+.calc-chip {
+  display: flex; gap: .7rem; align-items: baseline; justify-content: space-between;
+  width: 100%; text-align: left;
+  padding: .38rem .6rem; font-weight: 600; font-size: .86rem;
+  background: var(--panel-2); border: 1px solid var(--line);
+}
+.calc-chip:hover { border-color: var(--line-2); background: #232b36; }
+.calc-chip code { white-space: nowrap; }
+.calc-chip .lbl { color: var(--muted); font-weight: 500; font-size: .8rem; text-align: right; }
+@media (max-width: 560px) {
+  .calc-chip { flex-direction: column; gap: .1rem; }
+  .calc-chip .lbl { text-align: left; }
+  .calc-row { flex-direction: column; }
+}
+.calc-line { display: flex; gap: .55rem; align-items: center; flex-wrap: wrap; margin: .8rem 0 0; }
+.calc-line .btn { padding: .3rem .6rem; font-size: .82rem; }

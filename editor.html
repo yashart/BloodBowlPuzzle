@@ -134,6 +134,13 @@
         <textarea id="f-solution" rows="9" placeholder="**Step 1 — pick the ball up.** AG 3+ with one tackle zone is a 4+ roll…"></textarea>
       </div>
 
+      <div class="field">
+        <label for="f-calc">Dave's calculator string <span class="hint">optional — the author's line in
+          <a href="https://www.bloodbowldave.com/advanced" target="_blank" rel="noopener">Dave's advanced calculator</a>
+          notation, e.g. <code>D3,2D2,K8</code>; revealed with the solution and prefilled into the puzzle page's calculator box</span></label>
+        <input type="text" id="f-calc" spellcheck="false" autocomplete="off" placeholder="D3,2D2,K8,J8">
+      </div>
+
       <div class="btn-row" style="margin-top:.4rem">
         <button id="btn-add-deck" class="primary">Add to export</button>
         <button id="btn-download-one">Download this puzzle only</button>
@@ -191,6 +198,11 @@
             <tr><td class="mono">exact</td><td>Optional exact value shown next to the answer, e.g. <code>5/9 = 55.56%</code>.</td></tr>
             <tr><td class="mono">image</td><td>Path relative to the site root. Use <code>images/your-file.png</code>.</td></tr>
             <tr><td class="mono">tolerance</td><td>Optional per-puzzle tolerance in percentage points (default 5).</td></tr>
+            <tr><td class="mono">calc</td><td>Optional calculation string in the notation of
+              <a href="https://www.bloodbowldave.com/advanced" target="_blank" rel="noopener">Dave's advanced calculator</a>
+              (<code>D3,2D2,K8,J8</code>, see the reference in <a href="guide.html#calculator">the guide</a>).
+              Every puzzle page has a calculator box where players type their own line; after submitting,
+              this string is shown with the solution and dropped into that box.</td></tr>
           </tbody>
         </table></div>
       </div>
