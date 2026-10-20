@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>How scoring works — Blood Bowl Puzzles</title>
-<meta name="description" content="How Blood Bowl Puzzles scores your guesses, what the 90% interval means, how to add puzzles and how to host the whole thing on GitHub Pages.">
+<title>How it works — Blood Bowl Puzzles</title>
+<meta name="description" content="How Blood Bowl Puzzles works: build the play with action buttons, optionally predict the odds, and see the correct solution. Plus how to add puzzles and host the site.">
 <meta name="color-scheme" content="dark">
 <link rel="icon" href="images/favicon.svg">
 <link rel="stylesheet" href="css/style.css">
@@ -18,11 +18,11 @@
         <ellipse cx="16" cy="16" rx="10" ry="13" fill="#e8e2d4" stroke="#0d1015" stroke-width="2"/>
         <path d="M16 6.5v19M11.5 11h9M11.5 16h9M11.5 21h9" stroke="#b03030" stroke-width="2" stroke-linecap="round"/>
       </svg>
-      <span>Blood Bowl <b>Puzzles</b><small>how scoring works</small></span>
+      <span>Blood Bowl <b>Puzzles</b><small>how it works</small></span>
     </a>
     <nav class="nav">
       <a href="index.html">Play</a>
-      <a href="guide.html" aria-current="page">How scoring works</a>
+      <a href="guide.html" aria-current="page">How it works</a>
       <a href="editor.html">Puzzle editor</a>
     </nav>
   </div>
@@ -30,24 +30,26 @@
 
 <main class="wrap">
   <div class="card">
-    <h1>How scoring works</h1>
-    <p>Each puzzle gives you a situation, a legend of relevant skills, and one question: <b>what is the chance?</b>
-    You answer with a slider from 0 to 100%, press <b>Submit</b>, and immediately see the real number, how far off you were
-    and a worked solution.</p>
+    <h1>How it works</h1>
+    <p>Each puzzle gives you a situation and a legend of the relevant skills. You answer in two independent ways:</p>
     <ul>
-      <li><b>Hit / miss:</b> a guess within <b>±5 percentage points</b> of the true chance counts as a hit (a puzzle may set its own wider tolerance — the reveal always tells you which one applies). This tolerance exists because a slider cannot express values such as <code>74.07%</code> — without it, the puzzle would be unfair.</li>
-      <li><b>Error:</b> the absolute distance between your guess and the true answer, in percentage points (pp).</li>
-      <li><b>Accuracy:</b> hits ÷ puzzles, shown with a 90% Wilson confidence interval.</li>
-      <li><b>90% interval of your error:</b> a t-interval on your average miss distance. It answers "how precisely did this run measure my skill?" — repeat the run and about 9 of 10 such intervals would contain your true average error.</li>
-      <li><b>Leaderboard:</b> sorted by accuracy, then by smaller mean error. You may save your result anonymously or with a nickname.</li>
+      <li><b>How to play (always):</b> press the action buttons in the order you would do them — <code>block 1d</code>,
+      <code>block 2d</code>, <code>block uphill</code>, <code>dodge</code>, <code>gfi</code>, <code>pass</code>,
+      <code>catch</code> — and your solution builds up under the panel, e.g. <code>block 2d, dodge</code>.
+      <code>clear</code> starts it over. Submit and you get the correct sequence and the full worked solution.</li>
+      <li><b>Odds prediction (optional):</b> if the puzzle carries a correct answer, a 0–100% slider appears as well.
+      Leave it alone with the <b>Skip the odds</b> checkbox and you will simply be shown the real number — nothing is
+      scored against you.</li>
     </ul>
+    <p>There is no win/lose condition and no accuracy score. After the reveal you get the right odds and the solution
+    text; the end of the run shows a recap with the correct odds and solution for every puzzle.</p>
     <details class="help">
-      <summary>The formulas, because you are among friends</summary>
-      <p class="mono small">mean error = (1/n) · Σ |guessᵢ − answerᵢ|<br>
-      90% CI = mean ± t₀.₉₅,ₙ₋₁ · s / √n &nbsp;&nbsp;(s = sample standard deviation)<br>
-      accuracy CI (Wilson) = (p + z²/2n ± z·√(p(1−p)/n + z²/4n²)) / (1 + z²/n), with z = 1.645</p>
-      <p class="muted small">With a handful of puzzles these intervals are wide — that is the honest answer, not a bug.
-      Add more puzzles to the deck and the interval narrows.</p>
+      <summary>The one formula we still use</summary>
+      <p class="mono small">error = |your odds − correct odds| &nbsp;&nbsp;(percentage points)<br>
+      mean error = (1/n) · Σ errorᵢ &nbsp;&nbsp;(over the puzzles where you predicted odds)<br>
+      90% CI of the mean = mean ± t₀.₉₅,ₙ₋₁ · s / √n</p>
+      <p class="muted small">The interval is just context for the recap: with a handful of puzzles it is very wide.
+      Skipping the odds on a puzzle simply removes it from the average.</p>
     </details>
   </div>
 
@@ -96,10 +98,10 @@
     <div class="table-wrap"><table class="board">
       <thead><tr><th>File</th><th>Role</th></tr></thead>
       <tbody>
-        <tr><td class="mono">index.html</td><td>The quiz: puzzle screen, slider, reveal, results, leaderboard.</td></tr>
+        <tr><td class="mono">index.html</td><td>The quiz: puzzle screen, action panel, optional odds slider, reveal, recap.</td></tr>
         <tr><td class="mono">editor.html</td><td>The puzzle authoring form with live JSON and preview.</td></tr>
         <tr><td class="mono">puzzles.json</td><td>The deck itself. This is the only file you edit to add content.</td></tr>
-        <tr><td class="mono">js/app.js</td><td>Quiz flow and scoring.</td></tr>
+        <tr><td class="mono">js/app.js</td><td>Quiz flow: action buttons, optional odds, reveal and recap.</td></tr>
         <tr><td class="mono">js/engine.js</td><td>Markdown subset, statistics (t-interval, Wilson), puzzle loading and validation.</td></tr>
         <tr><td class="mono">js/leaderboard.js</td><td>Firebase or localStorage leaderboard behind one API.</td></tr>
         <tr><td class="mono">js/editor.js</td><td>Editor logic and export.</td></tr>

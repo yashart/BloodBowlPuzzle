@@ -1,37 +1,40 @@
 <h1 align="center">Blood Bowl Puzzles</h1>
-<p align="center">A static quiz site: read a Blood Bowl situation, set your odds on a slider, find out how good your
-gut feeling really is. Finishes with a 90% interval on your error and a place on the leaderboard.</p>
+<p align="center">A static quiz site: read a Blood Bowl situation, build the play with the action buttons ("block 2d, dodge…"),
+and compare your answer with the correct play and — optionally — the real odds.</p>
 
 ---
 
 ## What it does
 
 For every puzzle the player gets a pitch image, the mission text ("score the touchdown"), a **legend of who has which
-skills in this puzzle**, and a slider from 0 to 100%. After pressing **Submit** they get:
+skills in this puzzle**, and a panel of action buttons:
 
-* the correct answer (plus an exact value such as `5/9 = 55.56%` when that matters),
-* their own answer and the miss distance in percentage points,
-* the full worked solution,
+```
+block 1d   block 2d   block uphill   dodge   gfi   pass   catch   clear
+```
+
+Every press appends that button's label to **Your solution**, so pressing *block 2d* and then *dodge* gives
+`block 2d, dodge`; *clear* wipes the draft. Then they press **Submit** and get:
+
+* the correct action sequence (if the puzzle defines one) and the full worked solution,
+* **optionally** their odds prediction next to the correct odds — odds are no longer required and a puzzle may not
+  have any; skipping them is one checkbox away,
+* no win/lose verdict: just the right odds and the solution text,
 * a **Next puzzle** button.
 
-At the end of the run:
-
-* accuracy (guesses within ±5 pp count as a hit),
-* mean error and a **90% t-confidence interval** for it,
-* a 90% Wilson interval for accuracy,
-* a per-puzzle recap with every solution,
-* an optional nickname field and the **leaderboard**.
+At the end of the run there is a **recap** with the correct odds and the solution for every puzzle, plus how many
+puzzles were played and, if any odds were predicted, their mean error.
 
 ## Files
 
 ```
 index.html              the quiz
 editor.html             puzzle editor (form → live JSON → export)
-guide.html              scoring maths + hosting/Firebase instructions
+guide.html              how it works + hosting/Firebase instructions
 puzzles.json            the deck — the only content file you normally touch
 css/style.css           all styling
-js/app.js               quiz flow, scoring, results screen
-js/engine.js            markdown subset, statistics, puzzle loading/validation
+js/app.js               quiz flow: action buttons, optional odds, reveal, recap
+js/engine.js            markdown subset, action panel builders, statistics, puzzle loading/validation
 js/leaderboard.js       Firebase OR localStorage behind one API
 js/editor.js            editor logic and export
 js/config.example.js    copy to js/config.js and paste your Firebase keys
@@ -108,13 +111,15 @@ A single puzzle looks like this:
   ],
   "answer": 75,
   "exact": "3/4 = 75%",
+  "steps": ["block 2d", "dodge"],
   "solution": "**Step 1.** A 4+ pick-up is 1/2; Sure Hands re-rolls it, so 1 − (1/2)² = 3/4…",
   "author": "your nickname"
 }
 ```
 
-Field reference: `answer` is the integer the slider is compared against; `exact` is just a nicer display value;
-`tolerance` (optional, default 5) overrides the hit tolerance for that puzzle; each `legend` entry may carry a
+Field reference: `answer` is the optional correct odds (leave it out and the puzzle asks only "how to play");
+`exact` is just a nicer display value; `steps` is the optional correct action sequence (use the button labels);
+`actions` optionally replaces the button list for that puzzle; `tolerance` is kept for reference only; each `legend` entry may carry a
 `color` — one of `blue`, `red`, `green`, `yellow`, `purple`, `white` — that tints the player's name, dot and skill
 chips so the legend matches the markers on the pitch image (cosmetic only, omit it and the row is neutral);
 `task` and `solution` accept a small
@@ -149,17 +154,19 @@ the app knows where the scores come from.
 
 ## Scoring maths
 
+There is no pass/fail. If the player predicted odds, the site reports the absolute difference and, across the run,
+the mean error over the puzzles where odds were actually predicted:
+
 ```
-mean error      = (1/n) · Σ |guessᵢ − answerᵢ|              (percentage points)
+error           = |guess − answer|                          (percentage points)
+mean error      = (1/n) · Σ errorᵢ                           (n = puzzles with odds predicted)
 90% CI of error = mean ± t₀.₉₅,ₙ₋₁ · s/√n                   (t table up to n = 31, then z = 1.645)
-accuracy        = hits / n,  hits = guesses within ±5 pp
-90% CI of accuracy = Wilson score interval, z = 1.645
-rank            = 1 + number of runs with a strictly higher accuracy
 ```
 
 ## Notes and next steps
 
-* Progress is saved per deck: if the set of puzzles (or any answer) changes, an old unfinished run is not resumed.
+* Progress is saved per deck: if the set of puzzles (or any answer/solution sequence) changes, an old unfinished run
+  is not resumed.
 * Nothing is ever sent anywhere unless you press **Save my result** on the results screen.
 * Ideas if you want to grow it: a per-user history page, a difficulty filter, sharing a single puzzle via
   `index.html#puzzle-id`, or per-puzzle tag statistics in the leaderboard.

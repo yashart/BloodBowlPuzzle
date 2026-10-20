@@ -1,18 +1,16 @@
 /* ============================================================
-   app.js — the quiz itself: run through the puzzles, get a score,
-   a 90% interval on your error and a place on the leaderboard.
+   app.js — the quiz itself: play each puzzle by pressing the
+   action buttons, optionally predict the odds, then see the
+   correct odds and the full solution. No win/lose verdict.
    ============================================================ */
 
 import {
-  loadPuzzles, md, esc, fmtPct, fmtNum, fmtDate, setId, mean,
-  puzzleMediaHtml, legendHtml, tInterval90, wilson, toast,
+  loadPuzzles, md, esc, fmtNum, fmtPct, setId, mean,
+  puzzleMediaHtml, legendHtml, tInterval90, toast,
+  actionButtonsHtml, stepsHtml, solutionText,
 } from './engine.js';
-import { Leaderboard, cleanNick } from './leaderboard.js';
+import { Leaderboard } from './leaderboard.js';
 
-/** A guess counts as "correct" when it is within this many percentage points.
- *  A puzzle may override it with its own "tolerance" field. */
-const TOLERANCE = 5;
-const tolOf = (p) => (isFinite(p?.tolerance) && p.tolerance >= 0 ? p.tolerance : TOLERANCE);
 const PROGRESS_KEY = 'bbp.progress.';
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -21,9 +19,8 @@ const app = () => $('#app');
 const state = {
   puzzles: [],
   idx: 0,
-  answers: [],       // {guess, answer, error, hit}
+  answers: [],       // {guess, answer, error, steps}  (guess/error null when odds were skipped)
   runId: '',
-  nick: '',
   finished: false,
   submitted: null,
   savedProgress: null,
@@ -52,8 +49,6 @@ function saveProgress() {
 function clearProgress() {
   try { localStorage.removeItem(PROGRESS_KEY + state.runId); } catch { /* ignore */ }
 }
-
-try { state.nick = localStorage.getItem('bbp.nick') || ''; } catch { /* ignore */ }
 
 /* ----------------------------------------------------------- boot */
 
@@ -111,7 +106,7 @@ function screenResume(saved) {
       <div class="banner">
         <div style="flex:1 1 320px">
           <b>Unfinished run found.</b>
-          <div class="muted small">You answered ${saved.answers.length} of ${n} puzzles before. Continue where you stopped, or start again from puzzle 1.</div>
+          <div class="muted small">You played ${saved.answers.length} of ${n} puzzles before. Continue where you stopped, or start again from puzzle 1.</div>
         </div>
         <div class="btn-row">
           <button class="primary" id="btn-resume">Continue (puzzle ${saved.idx + 1})</button>
@@ -160,6 +155,28 @@ function rollHintHtml() {
     </div>`;
 }
 
+/** Optional odds prediction: shown only for puzzles that carry an `answer`. */
+function oddsHtml(p) {
+  if (!p.hasOdds) {
+    return `<p class="muted small odds-none">This puzzle doesn't ask for odds — just build the play.</p>`;
+  }
+  return `
+    <div class="odds-block" id="odds-block">
+      <div class="question">${esc(p.question)}</div>
+      <div class="slider-row">
+        <div class="slider">
+          <input type="range" id="guess" min="0" max="100" step="1" value="50" aria-label="Your odds prediction in percent">
+          <div class="range-scale"><span>0%</span><span>50%</span><span>100%</span></div>
+        </div>
+        <output class="readout" id="readout">50%</output>
+      </div>
+      <label class="skip-odds">
+        <input type="checkbox" id="odds-skip">
+        <span>Skip the odds <span class="muted small">(optional)</span></span>
+      </label>
+    </div>`;
+}
+
 function screenRun() {
   const n = state.puzzles.length;
   if (state.idx >= n) return screenResults();
@@ -193,16 +210,18 @@ function screenRun() {
       </div>
       <div class="zen-foot">
         <div class="answer-box" id="answer-box">
-          <div class="question">${esc(p.question)}</div>
-          <div class="slider-row">
-            <div class="slider">
-              <input type="range" id="guess" min="0" max="100" step="1" value="50" aria-label="Your answer in percent">
-              <div class="range-scale"><span>0%</span><span>50%</span><span>100%</span></div>
+          <div class="howto">
+            <div class="question">How do you play it?</div>
+            <p class="muted small howto-hint">Press the buttons in the order you would do them.</p>
+            <div class="action-grid" id="action-grid">${actionButtonsHtml(p)}</div>
+            <div class="solution-draft">
+              <div class="draft-head"><span>Your solution</span></div>
+              <div class="draft-text empty" id="draft-text">No actions yet — press a button above.</div>
             </div>
-            <output class="readout" id="readout">50%</output>
           </div>
-          <div class="btn-row btn-center">
-            <button class="primary btn-lg" id="btn-submit">Submit answer</button>
+          ${oddsHtml(p)}
+          <div class="btn-row btn-center submit-row">
+            <button class="primary btn-lg" id="btn-submit">Submit</button>
           </div>
           <div class="btn-row btn-center">
             <button class="link-btn" id="btn-restart" title="Clear this run and start again">Restart run</button>
@@ -212,17 +231,56 @@ function screenRun() {
       </div>
     </div>`;
 
+  /* ---- action panel: every press appends its own label to the draft ---- */
+  const steps = [];
+  const draftEl = $('#draft-text');
+  const paintDraft = () => {
+    const text = solutionText(steps);
+    draftEl.textContent = text || 'No actions yet — press a button above.';
+    draftEl.classList.toggle('empty', !steps.length);
+  };
+
+  $('#action-grid').addEventListener('click', (e) => {
+    const btn = e.target.closest('button.action-btn');
+    if (!btn) return;
+    if (btn.dataset.clear !== undefined) {
+      steps.length = 0;
+    } else if (btn.dataset.action) {
+      steps.push(btn.dataset.action);
+    } else {
+      return;
+    }
+    paintDraft();
+  });
+
+  /* ---- optional odds ---- */
   const slider = $('#guess');
   const readout = $('#readout');
-  const paint = () => {
-    readout.textContent = slider.value + '%';
+  const skip = $('#odds-skip');
+  const paintSlider = () => {
+    if (!slider) return;
+    const skipped = !!skip?.checked;
+    slider.disabled = skipped;
+    readout.textContent = skipped ? '—' : slider.value + '%';
     slider.style.setProperty('--pct', slider.value + '%');
+    $('#odds-block')?.classList.toggle('skipped', skipped);
   };
-  slider.addEventListener('input', paint);
-  paint();
+  slider?.addEventListener('input', paintSlider);
+  skip?.addEventListener('change', paintSlider);
+  paintSlider();
 
-  $('#btn-submit').addEventListener('click', () => reveal(Number(slider.value)));
-  slider.addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-submit').click(); });
+  const submit = () => {
+    const skipped = !p.hasOdds || !!skip?.checked;
+    const guess = skipped ? null : Number(slider.value);
+    if (!steps.length && guess === null) {
+      toast('Press at least one action — or predict the odds.');
+      return;
+    }
+    reveal({ guess, steps: [...steps] });
+  };
+
+  $('#btn-submit').addEventListener('click', submit);
+  slider?.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
   $('#btn-restart').addEventListener('click', () => {
     if (!confirm('Restart the run from puzzle 1? Your current answers will be lost.')) return;
     clearProgress();
@@ -233,43 +291,61 @@ function screenRun() {
 
 /* ----------------------------------------------------------- answer + reveal */
 
-function reveal(guess) {
+function reveal({ guess, steps }) {
   const p = state.puzzles[state.idx];
-  const tol = tolOf(p);
-  const error = Math.abs(guess - p.answer);
-  const hit = error <= tol;
-  state.answers[state.idx] = { guess, answer: p.answer, error, hit, tol };
+  const answer = p.answer;
+  const error = guess !== null && answer !== null ? Math.abs(guess - answer) : null;
+
+  state.answers[state.idx] = { guess, answer, error, steps };
   state.idx = Math.min(state.idx + 1, state.puzzles.length);
   saveProgress();
 
-  const box = $('#answer-box');
-  $('button#btn-submit', box)?.setAttribute('disabled', 'disabled');
+  $('#btn-submit')?.setAttribute('disabled', 'disabled');
   const slider = $('#guess');
   if (slider) slider.disabled = true;
 
+  let oddsResult;
+  if (error !== null) {
+    oddsResult = `
+      <div class="verdict-grid">
+        <div class="stat"><b>${esc(fmtNum(answer))}%</b><span>correct odds</span></div>
+        <div class="stat"><b>${esc(String(guess))}%</b><span>your odds</span></div>
+        <div class="stat"><b>${fmtPct(error, 1)}</b><span>difference</span></div>
+      </div>
+      ${p.exact ? `<div class="muted small exact-line">Exact value: <code>${esc(p.exact)}</code></div>` : ''}`;
+  } else if (answer !== null) {
+    oddsResult = `
+      <div class="verdict-grid odds-skipped">
+        <div class="stat"><b>${esc(fmtNum(answer))}%</b><span>correct odds</span></div>
+        <div class="stat"><b>—</b><span>your odds</span></div>
+      </div>
+      <div class="muted small exact-line">You skipped the odds for this puzzle.${p.exact ? ` Exact value: <code>${esc(p.exact)}</code>.` : ''}</div>`;
+  } else {
+    oddsResult = `<div class="muted small exact-line">This puzzle doesn't ask for odds.</div>`;
+  }
+
   const last = state.idx >= state.puzzles.length;
-  const verdict = hit
-    ? `<b>${fmtPct(error, 1)} off — good enough.</b> This puzzle counts anything within ±${tol} pp.`
-    : `<b>${fmtPct(error, 1)} off — that one hurt.</b> This puzzle needs you within ±${tol} pp.`;
 
   $('#reveal').innerHTML = `
-    <div class="result ${hit ? 'hit' : 'miss'}">
-      <div class="result-head">${hit ? '✔ Correct' : '✖ Missed'} <span class="muted small" style="font-weight:500">(${esc(p.title)})</span></div>
+    <div class="result">
+      <div class="result-head">Result <span class="muted small" style="font-weight:500">(${esc(p.title)})</span></div>
       <div class="result-body">
-        <div class="verdict-grid">
-          <div class="stat"><b>${esc(String(p.answer))}%</b><span>correct answer</span></div>
-          <div class="stat"><b>${esc(String(guess))}%</b><span>your answer</span></div>
-          <div class="stat"><b>${fmtPct(error, 1)}</b><span>error</span></div>
-        </div>
-        <div class="muted small" style="margin:-.3rem 0 .8rem">${verdict}${p.exact ? ' Exact value: <code>' + esc(p.exact) + '</code>.' : ''}</div>
+        ${oddsResult}
         <div class="solution">
-          <h3>Solution</h3>
-          ${md(p.solution) || '<p class="muted">No solution text was written for this puzzle yet.</p>'}
+          <h3>Correct solution</h3>
+          ${p.steps.length ? `<div class="correct-steps">${stepsHtml(p.steps)}</div>` : ''}
+          ${md(p.solution) || (p.steps.length ? '' : '<p class="muted">No solution text was written for this puzzle yet.</p>')}
+        </div>
+        <div class="solution mine">
+          <h3>Your solution</h3>
+          ${steps.length
+            ? `<div class="draft-text">${esc(solutionText(steps))}</div>`
+            : '<p class="muted small">You didn\'t press any actions.</p>'}
         </div>
         <div class="next-row btn-center">
           <span class="muted small">${last ? 'That was the last puzzle.' : `Next up: <b>${esc(state.puzzles[state.idx].title)}</b>`}</span>
           <div class="btn-row btn-center">
-            <button class="primary btn-lg" id="btn-next">${last ? 'See my results' : 'Next puzzle →'}</button>
+            <button class="primary btn-lg" id="btn-next">${last ? 'See the full recap' : 'Next puzzle →'}</button>
           </div>
         </div>
       </div>
@@ -286,35 +362,62 @@ function reveal(guess) {
 /* ----------------------------------------------------------- results */
 
 function computeStats() {
-  const answers = state.answers.filter(Boolean);
-  const n = answers.length;
-  const errors = answers.map(a => a.error);
-  const hits = answers.filter(a => a.hit).length;
-  const ci = tInterval90(errors);
-  const acc = wilson(hits, n);
-  const missed = answers.filter(a => !a.hit);
+  const played = state.answers.filter(Boolean);
+  const odds = played.filter(a => a.error !== null && a.error !== undefined && isFinite(a.error));
+  const meanError = odds.length ? mean(odds.map(a => a.error)) : null;
   return {
-    n, hits, misses: n - hits,
-    accuracy: n ? (hits / n) * 100 : 0,
-    meanError: n ? mean(errors) : 0,
-    ci,
-    acc,
-    worst: answers.length ? answers.reduce((w, a) => (a.error > w.error ? a : w), answers[0]) : null,
-    answers,
-    missed,
+    played: played.length,
+    oddsCount: odds.length,
+    meanError,
+    ci: tInterval90(odds.map(a => a.error)),
   };
+}
+
+function recapHtml() {
+  return state.puzzles.map((p, i) => {
+    const a = state.answers[i];
+    const yourOdds = a && a.guess !== null && a.guess !== undefined
+      ? `your odds: <b>${esc(String(a.guess))}%</b>${isFinite(a.error) ? ` (${fmtPct(a.error, 1)} off)` : ''}`
+      : 'your odds: <span class="muted">skipped</span>';
+    const oddsRow = p.hasOdds
+      ? `correct odds: <b>${esc(fmtNum(p.answer))}%</b>${p.exact ? ` <code>${esc(p.exact)}</code>` : ''} · ${yourOdds}`
+      : '<span class="muted">no odds for this puzzle</span>';
+    return `
+      <article class="recap">
+        <div class="recap-head">
+          <b>${i + 1}. ${esc(p.title)}</b>
+          <span class="recap-odds small">${oddsRow}</span>
+        </div>
+        <div class="recap-steps">${p.steps.length ? stepsHtml(p.steps) : ''}</div>
+        <div class="recap-solution small">${md(p.solution) || '<span class="muted">No solution text.</span>'}</div>
+        ${a && a.steps && a.steps.length
+          ? `<div class="recap-mine small muted">Your solution: ${esc(solutionText(a.steps))}</div>`
+          : ''}
+      </article>`;
+  }).join('');
 }
 
 function screenResults() {
   const s = computeStats();
+  const errLine = s.meanError !== null
+    ? `<div class="stat"><b>${fmtPct(s.meanError, 2)}</b><span>mean error${s.ci ? ' (90% CI ' + fmtPct(s.ci.lo, 1) + ' – ' + fmtPct(s.ci.hi, 1) + ')' : ''}</span></div>`
+    : '';
 
   app().innerHTML = `
     <div class="zen-page">
       <div class="results-head">
         <h1>Run finished</h1>
+        <p class="muted">Here are the correct odds and the full solution for every puzzle.</p>
       </div>
       <div class="stats-row">
-        <div class="stat"><b>${fmtPct(s.meanError, 2)}</b><span>mean error</span></div>
+        <div class="stat"><b>${s.played}</b><span>puzzles played</span></div>
+        <div class="stat"><b>${s.oddsCount}</b><span>odds predicted</span></div>
+        ${errLine}
+      </div>
+
+      <div class="zen-block">
+        <h2>Recap</h2>
+        <div class="recap-list">${recapHtml()}</div>
       </div>
 
       <div class="btn-row btn-center zen-actions">

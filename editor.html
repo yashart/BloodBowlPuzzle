@@ -22,7 +22,7 @@
     </a>
     <nav class="nav">
       <a href="index.html">Play</a>
-      <a href="guide.html">How scoring works</a>
+      <a href="guide.html">How it works</a>
       <a href="editor.html" aria-current="page">Puzzle editor</a>
     </nav>
   </div>
@@ -101,7 +101,7 @@
       </div>
 
       <div class="field">
-        <label for="f-question">question above the slider</label>
+        <label for="f-question">question above the odds slider <span class="hint">ignored when the puzzle has no answer</span></label>
         <input type="text" id="f-question" value="What are the odds? (%)">
       </div>
 
@@ -116,17 +116,22 @@
 
       <div class="field-row">
         <div class="field">
-          <label for="f-answer">correct answer, % <span class="hint">integer 0–100</span></label>
-          <input type="number" id="f-answer" min="0" max="100" step="1" value="50">
+          <label for="f-answer">correct odds, % <span class="hint">integer 0–100, or empty for a "how to play" puzzle</span></label>
+          <input type="number" id="f-answer" min="0" max="100" step="1" placeholder="no odds">
         </div>
         <div class="field">
           <label for="f-exact">exact value <span class="hint">optional, e.g. 3/4 = 75%</span></label>
           <input type="text" id="f-exact" placeholder="3/4 = 75%">
         </div>
         <div class="field">
-          <label for="f-tolerance">tolerance, pp <span class="hint">how close counts as a hit (site default 5)</span></label>
+          <label for="f-tolerance">tolerance, pp <span class="hint">optional, only used in the editor check</span></label>
           <input type="number" id="f-tolerance" min="0" max="25" step="1" value="5">
         </div>
+      </div>
+
+      <div class="field">
+        <label for="f-steps">correct action sequence <span class="hint">comma separated button labels, e.g. block 2d, dodge</span></label>
+        <input type="text" id="f-steps" placeholder="block 2d, dodge">
       </div>
 
       <div class="field">
@@ -180,15 +185,17 @@
           <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
           <tbody>
             <tr><td class="mono">id</td><td>Unique slug. Also used to detect an unfinished run, so don't rename puzzles casually.</td></tr>
-            <tr><td class="mono">answer</td><td>Integer 0–100. The slider is 0–100% and a guess within ±5 pp counts as a hit.</td></tr>
+            <tr><td class="mono">answer</td><td><b>Optional.</b> Integer 0–100 (the odds). Leave it out and the puzzle is a pure "how to play" puzzle — no odds slider at all.</td></tr>
+            <tr><td class="mono">steps</td><td>The correct action sequence as an array, e.g. <code>["block 2d", "dodge"]</code>. Rendered with the buttons' labels, so use those exact words.</td></tr>
             <tr><td class="mono">task</td><td>The situation and the mission. Markdown subset is supported.</td></tr>
-            <tr><td class="mono">question</td><td>The line right above the slider, e.g. "What is the chance you knock the carrier down? (%)".</td></tr>
+            <tr><td class="mono">question</td><td>The line right above the optional odds slider, e.g. "What is the chance you knock the carrier down? (%)".</td></tr>
             <tr><td class="mono">legend</td><td>Conditions: who has which skills in this puzzle. Each entry is
               <code>{ name, skills[], note, color }</code>; <code>color</code> is one of
               <code>blue</code>, <code>red</code>, <code>green</code>, <code>yellow</code>, <code>purple</code>,
               <code>white</code> — or omitted for no colour. It is only cosmetic: the puzzle reads the same without it.</td></tr>
             <tr><td class="mono">solution</td><td>Full worked solution, revealed after submitting.</td></tr>
-            <tr><td class="mono">exact</td><td>Optional exact value shown next to the answer, e.g. <code>5/9 = 55.56%</code>.</td></tr>
+            <tr><td class="mono">actions</td><td>Optional per-puzzle override of the buttons. Defaults to <code>block 1d, block 2d, block uphill, dodge, gfi, pass, catch</code> plus <code>clear</code>.</td></tr>
+            <tr><td class="mono">exact</td><td>Optional exact value shown next to the odds, e.g. <code>5/9 = 55.56%</code>.</td></tr>
             <tr><td class="mono">image</td><td>Path relative to the site root. Use <code>images/your-file.png</code>.</td></tr>
             <tr><td class="mono">tolerance</td><td>Optional per-puzzle tolerance in percentage points (default 5).</td></tr>
           </tbody>
