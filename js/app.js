@@ -153,11 +153,10 @@ function rollHintHtml() {
   return `
     <div class="roll-hint">
       <table>
-        <caption>Hint — D6 success chances</caption>
+        <caption>D6 success chances</caption>
         <thead><tr><th scope="col">Roll</th><th scope="col">0rr</th><th scope="col">1rr</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
-      <p class="muted small">0rr = no reroll · 1rr = reroll a failed roll once.</p>
     </div>`;
 }
 
@@ -186,7 +185,6 @@ function screenRun() {
                 <h3>Mission</h3>
                 <div>${md(p.task)}</div>
               </div>
-              <h3 class="zen-sub">Conditions — who has what</h3>
               ${legendHtml(p)}
               ${rollHintHtml()}
             </div>
