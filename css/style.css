@@ -223,7 +223,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 /* ----------------------------------------------------------- answer block */
 
 .answer-box {
-  width: min(560px, 100%);
+  width: min(640px, 100%);
   margin: clamp(1rem, 3vw, 2rem) auto 0;
   text-align: center;
 }
@@ -264,10 +264,94 @@ input[type="range"]::-moz-range-thumb {
   font-variant-numeric: tabular-nums;
 }
 
+/* "How do you play it?" — press buttons, build the solution text. */
+.howto { text-align: left; }
+.howto .question { text-align: center; margin-bottom: .25rem; }
+.howto-hint { text-align: center; margin-bottom: .7rem; }
+
+.action-grid {
+  display: grid; gap: .45rem;
+  grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
+}
+.action-btn {
+  padding: .55rem .45rem; font-size: .9rem; font-weight: 700;
+  text-transform: lowercase; letter-spacing: .01em;
+}
+.action-btn.blue,
+.action-btn[data-action="block 1d"],
+.action-btn[data-action="block 2d"],
+.action-btn[data-action="block uphill"] {
+  background: rgba(63, 140, 255, .18);
+  border-color: rgba(63, 140, 255, .5);
+  color: #9cc6ff;
+}
+.action-btn.blue:hover,
+.action-btn[data-action="block 1d"]:hover,
+.action-btn[data-action="block 2d"]:hover,
+.action-btn[data-action="block uphill"]:hover {
+  background: rgba(63, 140, 255, .28);
+  border-color: rgba(63, 140, 255, .75);
+  color: #cfe3ff;
+}
+.action-btn.yellow,
+.action-btn[data-action="dodge"],
+.action-btn[data-action="catch"] {
+  background: rgba(227, 179, 65, .18);
+  border-color: rgba(227, 179, 65, .5);
+  color: #f5d376;
+}
+.action-btn.yellow:hover,
+.action-btn[data-action="dodge"]:hover,
+.action-btn[data-action="catch"]:hover {
+  background: rgba(227, 179, 65, .28);
+  border-color: rgba(227, 179, 65, .75);
+  color: #ffe599;
+}
+.action-btn.clear,
+.action-btn.red {
+  background: rgba(229, 83, 75, .18);
+  border-color: rgba(229, 83, 75, .5);
+  color: #ff9d94;
+}
+.action-btn.clear:hover,
+.action-btn.red:hover {
+  background: rgba(229, 83, 75, .28);
+  border-color: rgba(229, 83, 75, .75);
+  color: #ffc2bc;
+}
+.action-btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+.solution-draft { margin-top: .8rem; }
+.draft-head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: .6rem;
+  font-size: .74rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+}
+.draft-text {
+  margin-top: .25rem; padding: .55rem .7rem; min-height: 2.7rem;
+  background: #0b0f14; border: 1px dashed var(--line-2); border-radius: 8px;
+  font-weight: 600; color: var(--text); overflow-wrap: anywhere;
+}
+.draft-text.empty { color: var(--muted); font-weight: 500; font-style: italic; }
+
+/* Optional odds block. */
+.odds-block { margin-top: 1.15rem; }
+.odds-block.skipped .question { color: var(--muted); }
+.odds-block.skipped .slider-row { opacity: .4; }
+.skip-odds {
+  display: inline-flex; align-items: center; gap: .45rem; margin-top: .35rem;
+  font-size: .82rem; color: var(--muted); cursor: pointer; user-select: none;
+}
+.skip-odds input { accent-color: var(--blue); width: 1rem; height: 1rem; cursor: pointer; }
+.odds-none { margin-top: 1rem; text-align: center; }
+.submit-row { margin-top: 1.15rem; }
+.exact-line { margin: -.35rem 0 .9rem; }
+.verdict-grid.odds-skipped { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
 .result { margin: 1.25rem auto 0; max-width: 640px; border-radius: var(--radius-sm); border: 1px solid var(--line); overflow: hidden; text-align: left; }
-.result-head { padding: .7rem .9rem; font-weight: 700; display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
-.result.hit .result-head { background: rgba(63, 185, 80, .16); border-bottom: 1px solid rgba(63, 185, 80, .35); color: #8fe39b; }
-.result.miss .result-head { background: rgba(229, 83, 75, .15); border-bottom: 1px solid rgba(229, 83, 75, .35); color: #ff9d94; }
+.result-head {
+  padding: .7rem .9rem; font-weight: 700; display: flex; gap: .6rem; align-items: center; flex-wrap: wrap;
+  background: var(--panel-2); border-bottom: 1px solid var(--line);
+}
 .result-body { padding: .8rem .95rem; }
 .verdict-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; margin-bottom: .9rem; }
 @media (max-width: 560px) { .verdict-grid { grid-template-columns: 1fr 1fr; } }
@@ -279,8 +363,41 @@ input[type="range"]::-moz-range-thumb {
 }
 .solution h3 { color: var(--accent-2); text-transform: uppercase; font-size: .78rem; letter-spacing: .08em; }
 .solution ul { margin: .2rem 0 .9rem; padding-left: 1.1rem; }
+.solution.mine { border-left-color: var(--blue); margin-top: .7rem; }
+.solution.mine h3 { color: var(--blue); }
+.solution.mine p { margin: 0; }
+
+/* correct action sequence, rendered as numbered chips */
+.correct-steps { margin-bottom: .7rem; }
+.step-chips { display: inline-flex; flex-wrap: wrap; gap: .35rem; }
+.step-chip {
+  display: inline-flex; align-items: center; gap: .35rem;
+  font-size: .84rem; font-weight: 700; padding: .2rem .5rem .2rem .35rem;
+  border-radius: 7px; background: rgba(242, 106, 46, .13);
+  border: 1px solid rgba(242, 106, 46, .38); color: #ffc59f;
+}
+.step-chip i {
+  font-style: normal; font-size: .68rem; font-weight: 700;
+  background: rgba(242, 106, 46, .3); border-radius: 4px; padding: 0 .3rem; color: #ffe3d1;
+}
 
 .next-row { display: flex; flex-direction: column; align-items: center; gap: .7rem; margin-top: 1.2rem; }
+
+/* ----------------------------------------------------------- recap (results) */
+
+.recap-list { display: grid; gap: .7rem; }
+.recap {
+  background: #0f1319; border: 1px solid var(--line); border-left: 3px solid var(--blue);
+  border-radius: var(--radius-sm); padding: .75rem .9rem;
+}
+.recap-head { display: flex; gap: .5rem 1rem; align-items: baseline; flex-wrap: wrap; margin-bottom: .45rem; }
+.recap-odds { color: var(--muted); }
+.recap-odds b { color: var(--text); }
+.recap-solution { color: #c3cedb; }
+.recap-solution p { margin: 0 0 .5rem; }
+.recap-solution p:last-child { margin-bottom: 0; }
+.recap-mine { margin-top: .45rem; }
+.recap-steps:empty { display: none; }
 
 /* ----------------------------------------------------------- zen shell (play page) */
 

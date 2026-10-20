@@ -146,9 +146,45 @@ export function legendColorOptions(selected = '') {
   ].join('');
 }
 
-/* ----------------------------------------------------------- puzzle files */
+/* ----------------------------------------------------------- solution actions */
 
-const REQUIRED_NUM = ['answer'];
+/**
+ * The action panel the player builds their solution with. Every button simply
+ * appends its own label to the answer text, e.g. "block 2d, dodge".
+ * A puzzle may override the list with its own `actions` array.
+ */
+export const DEFAULT_ACTIONS = [
+  'block 1d', 'block 2d', 'block uphill', 'dodge', 'gfi', 'pass', 'catch',
+];
+
+/** Not an action: pressing it wipes the solution built so far. */
+export const CLEAR_LABEL = 'clear';
+
+/** Colour class for known action buttons. */
+export const ACTION_COLORS = {
+  'block 1d': 'blue',
+  'block 2d': 'blue',
+  'block uphill': 'blue',
+  'dodge': 'yellow',
+  'catch': 'yellow',
+  'clear': 'red',
+};
+
+export function actionColor(label) {
+  return ACTION_COLORS[String(label ?? '').trim().toLowerCase()] || '';
+}
+
+/** The button labels for a puzzle (fixed defaults, or the puzzle's own list). */
+export function actionsFor(p) {
+  return Array.isArray(p?.actions) && p.actions.length ? p.actions : DEFAULT_ACTIONS;
+}
+
+/** "block 2d, dodge" — how a list of actions is shown and stored as text. */
+export function solutionText(steps) {
+  return (Array.isArray(steps) ? steps : []).filter(Boolean).join(', ');
+}
+
+/* ----------------------------------------------------------- puzzle files */
 
 /** Accepts either a raw array or {version, puzzles:[...]}, returns a normalised array. */
 export function normalizeCollection(raw) {
@@ -160,14 +196,23 @@ export function normalizeCollection(raw) {
   return list.map((p, i) => normalizePuzzle(p, i));
 }
 
+/**
+ * A puzzle asks for the odds only when it carries an `answer`. Without one
+ * ("how to play" puzzles) the player just builds the action sequence.
+ */
+function oddsAnswer(p, id) {
+  const raw = p.answer;
+  if (raw === null || raw === undefined || raw === '') return null;
+  if (!isFinite(Number(raw))) throw new Error(`Puzzle "${id}": field "answer" must be a number (or left out).`);
+  const answer = Number(raw);
+  if (answer < 0 || answer > 100) throw new Error(`Puzzle "${id}": "answer" must be between 0 and 100.`);
+  return answer;
+}
+
 export function normalizePuzzle(p, i = 0) {
   if (!p || typeof p !== 'object') throw new Error(`Puzzle #${i + 1} is not an object.`);
   const id = String(p.id ?? `puzzle-${i + 1}`).trim();
-  for (const key of REQUIRED_NUM) {
-    if (!isFinite(Number(p[key]))) throw new Error(`Puzzle "${id}": field "${key}" must be a number.`);
-  }
-  const answer = Number(p.answer);
-  if (answer < 0 || answer > 100) throw new Error(`Puzzle "${id}": "answer" must be between 0 and 100.`);
+  const answer = oddsAnswer(p, id);
   if (!p.task && !p.image) throw new Error(`Puzzle "${id}": needs at least a "task" text or an "image".`);
 
   let legend = Array.isArray(p.legend) ? p.legend : [];
@@ -182,6 +227,11 @@ export function normalizePuzzle(p, i = 0) {
         ? String(e.color).trim().toLowerCase() : '',
     }));
 
+  const steps = (Array.isArray(p.steps) ? p.steps.map(String) : String(p.steps ?? '').split(','))
+    .map(s => s.trim()).filter(Boolean);
+  const actions = (Array.isArray(p.actions) ? p.actions.map(String) : [])
+    .map(s => s.trim()).filter(Boolean);
+
   return {
     id,
     title: String(p.title ?? id),
@@ -192,9 +242,12 @@ export function normalizePuzzle(p, i = 0) {
     task: String(p.task ?? ''),
     question: String(p.question ?? 'What are the odds? (%)'),
     legend,
-    answer,
+    answer,                       // null = this puzzle does not ask for odds
+    hasOdds: answer !== null,
     exact: String(p.exact ?? ''),
+    steps,                        // correct action sequence, e.g. ["block 2d", "dodge"]
     solution: String(p.solution ?? ''),
+    actions: actions.length ? actions : DEFAULT_ACTIONS.slice(),
     author: String(p.author ?? ''),
     tolerance: isFinite(Number(p.tolerance)) ? Number(p.tolerance) : 5,
   };
@@ -215,10 +268,33 @@ export async function loadPuzzles(url = 'puzzles.json') {
 /* ----------------------------------------------------------- builders */
 
 export function setId(puzzles) {
-  const str = puzzles.map(p => `${p.id}:${p.answer}`).join('|');
+  const str = puzzles.map(p => `${p.id}:${p.answer ?? ''}:${p.steps.join('>')}`).join('|');
   let h = 5381;
   for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0;
   return 'set' + (h >>> 0).toString(36);
+}
+
+/**
+ * The player's answer panel: one button per action plus "clear".
+ * Buttons carry their label in data-action; app.js appends it to the draft.
+ */
+export function actionButtonsHtml(p) {
+  const buttons = actionsFor(p).map(a => {
+    const color = actionColor(a);
+    const cls = color ? `action-btn ${color}` : 'action-btn';
+    return `<button type="button" class="${cls}" data-action="${esc(a)}">${esc(a)}</button>`;
+  });
+  buttons.push(`<button type="button" class="action-btn clear red" data-clear="1">${esc(CLEAR_LABEL)}</button>`);
+  return buttons.join('');
+}
+
+/** A correct action sequence rendered as numbered chips. */
+export function stepsHtml(steps, empty = 'No action sequence was written for this puzzle.') {
+  const list = (Array.isArray(steps) ? steps : []).filter(Boolean);
+  if (!list.length) return `<span class="muted small">${esc(empty)}</span>`;
+  return `<span class="step-chips">${list
+    .map((s, i) => `<span class="step-chip"><i>${i + 1}</i>${esc(s)}</span>`)
+    .join('')}</span>`;
 }
 
 export function puzzleMediaHtml(p) {

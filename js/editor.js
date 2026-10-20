@@ -5,7 +5,7 @@
 
 import {
   esc, md, toast, normalizePuzzle, normalizeCollection, legendHtml,
-  legendColor, legendColorOptions,
+  legendColor, legendColorOptions, actionButtonsHtml, stepsHtml,
 } from './engine.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -22,7 +22,7 @@ function blankPuzzle() {
     image: '', imageAlt: '',
     task: '', question: 'What are the odds? (%)',
     legend: [{ name: '', skills: [], note: '', color: '' }],
-    answer: 50, exact: '', solution: '', author: '', tolerance: 5,
+    answer: null, exact: '', steps: [], solution: '', author: '', tolerance: 5,
   };
 }
 
@@ -65,8 +65,9 @@ function readForm() {
     task: $('#f-task').value.trim(),
     question: $('#f-question').value.trim() || 'What are the odds? (%)',
     legend,
-    answer: Number($('#f-answer').value),
+    answer: $('#f-answer').value.trim() === '' ? null : Number($('#f-answer').value),
     exact: $('#f-exact').value.trim(),
+    steps: $('#f-steps').value.split(',').map(s => s.trim()).filter(Boolean),
     solution: $('#f-solution').value.trim(),
     author: $('#f-author').value.trim(),
     tolerance: Number($('#f-tolerance').value || 5),
@@ -82,8 +83,9 @@ function writeForm(p) {
   $('#f-imagealt').value = p.imageAlt || '';
   $('#f-task').value = p.task || '';
   $('#f-question').value = p.question || 'What are the odds? (%)';
-  $('#f-answer').value = isFinite(p.answer) ? p.answer : 50;
+  $('#f-answer').value = isFinite(p.answer) ? p.answer : '';
   $('#f-exact').value = p.exact || '';
+  $('#f-steps').value = (p.steps || []).join(', ');
   $('#f-solution').value = p.solution || '';
   $('#f-author').value = p.author || '';
   $('#f-tolerance').value = p.tolerance ?? 5;
@@ -99,10 +101,12 @@ function validate(p) {
   else if (!/^[a-z0-9._-]+$/i.test(p.id)) errors.push('id may only contain letters, digits, dot, dash and underscore.');
   if (!p.title) errors.push('title is required.');
   if (!p.task) errors.push('task text is required — this is the puzzle description the player reads.');
-  if (!isFinite(p.answer)) errors.push('answer must be a number.');
-  else if (p.answer < 0 || p.answer > 100) errors.push('answer must be between 0 and 100.');
+  if (p.answer !== null) {
+    if (!isFinite(p.answer)) errors.push('answer must be a number, or leave the field empty for a puzzle that asks only "how to play".');
+    else if (p.answer < 0 || p.answer > 100) errors.push('answer must be between 0 and 100 (or empty for no odds).');
+  }
   if (!p.image) errors.push('image path is empty — the puzzle will render a "no image" placeholder. (Warning, not an error.)');
-  if (!p.solution) errors.push('solution text is empty — players will see nothing after submitting. (Warning, not an error.)');
+  if (!p.solution && !p.steps.length) errors.push('solution text is empty — players will see nothing after submitting. (Warning, not an error.)');
   return errors;
 }
 
@@ -149,9 +153,16 @@ function refresh() {
     </div>
     <div class="solution small">${md(p.task) || '<span class="muted">No task text yet.</span>'}</div>
     <div style="margin-top:.6rem">${legendHtml({ legend: p.legend || [] })}</div>
-    <p class="small muted" style="margin-top:.6rem">${esc(p.question || '')}
-      → answer <b>${isFinite(p.answer) ? esc(String(p.answer)) + '%' : '—'}</b>
-      ${p.exact ? ` <code>${esc(p.exact)}</code>` : ''} · tolerance for the "correct" badge in this preview: ±${esc(String(p.tolerance ?? 5))} pp</p>`;
+    <div class="howto" style="margin-top:.9rem">
+      <p class="small muted" style="margin-bottom:.4rem">The answer panel the player gets:</p>
+      <div class="action-grid">${actionButtonsHtml(p)}</div>
+    </div>
+    <div style="margin-top:.5rem">${p.steps.length ? stepsHtml(p.steps) : ''}</div>
+    <p class="small muted" style="margin-top:.6rem">
+      ${p.answer !== null
+        ? `${esc(p.question || '')} → correct odds <b>${isFinite(p.answer) ? esc(String(p.answer)) + '%' : '—'}</b>${p.exact ? ` <code>${esc(p.exact)}</code>` : ''}`
+        : 'No odds for this puzzle — the player only builds the action sequence.'}
+    </p>`;
 }
 
 /* ----------------------------------------------------------- deck */
@@ -170,7 +181,7 @@ function renderDeck() {
   }
   host.innerHTML = `<div class="list-puzzles">${state.deck.map((p, i) => `
     <div class="item">
-      <div><b>${esc(p.title || p.id)}</b><div class="muted small mono">${esc(p.id)} · answer ${esc(String(p.answer))}%</div></div>
+      <div><b>${esc(p.title || p.id)}</b><div class="muted small mono">${esc(p.id)} · ${p.answer === null || p.answer === undefined ? 'no odds' : 'odds ' + esc(String(p.answer)) + '%'}</div></div>
       <div class="btn-row">
         <button class="btn-sm" data-load="${i}">Edit</button>
         <button class="btn-sm" data-up="${i}" ${i === 0 ? 'disabled' : ''} title="Move up">↑</button>
