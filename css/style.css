@@ -415,3 +415,12 @@ textarea { min-height: 96px; resize: vertical; font-family: var(--mono); font-si
 details.help { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: .6rem .8rem; background: rgba(255, 255, 255, .02); }
 details.help summary { cursor: pointer; font-weight: 700; }
 details.help[open] summary { margin-bottom: .6rem; }
+
+/* Single-roll reference, shared by every puzzle. */
+.roll-hint { margin-top: 1.2rem; max-width: 320px; }
+.roll-hint table { width: 100%; border-collapse: collapse; font-size: .85rem; font-variant-numeric: tabular-nums; }
+.roll-hint caption { text-align: left; color: var(--muted); font-weight: 600; margin-bottom: .4rem; }
+.roll-hint th, .roll-hint td { padding: .25rem .65rem; border-bottom: 1px solid var(--line); text-align: right; }
+.roll-hint th:first-child { text-align: left; }
+.roll-hint thead { background: var(--panel-2); }
+.roll-hint p { margin-top: .4rem; }
