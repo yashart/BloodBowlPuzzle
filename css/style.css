@@ -277,10 +277,48 @@ input[type="range"]::-moz-range-thumb {
   padding: .55rem .45rem; font-size: .9rem; font-weight: 700;
   text-transform: lowercase; letter-spacing: .01em;
 }
-.action-btn.clear {
-  background: transparent; border-style: dashed; color: var(--muted); font-weight: 600;
+.action-btn.blue,
+.action-btn[data-action="block 1d"],
+.action-btn[data-action="block 2d"],
+.action-btn[data-action="block uphill"] {
+  background: rgba(63, 140, 255, .18);
+  border-color: rgba(63, 140, 255, .5);
+  color: #9cc6ff;
 }
-.action-btn.clear:hover { color: var(--text); border-color: var(--line-2); background: rgba(255, 255, 255, .05); }
+.action-btn.blue:hover,
+.action-btn[data-action="block 1d"]:hover,
+.action-btn[data-action="block 2d"]:hover,
+.action-btn[data-action="block uphill"]:hover {
+  background: rgba(63, 140, 255, .28);
+  border-color: rgba(63, 140, 255, .75);
+  color: #cfe3ff;
+}
+.action-btn.yellow,
+.action-btn[data-action="dodge"],
+.action-btn[data-action="catch"] {
+  background: rgba(227, 179, 65, .18);
+  border-color: rgba(227, 179, 65, .5);
+  color: #f5d376;
+}
+.action-btn.yellow:hover,
+.action-btn[data-action="dodge"]:hover,
+.action-btn[data-action="catch"]:hover {
+  background: rgba(227, 179, 65, .28);
+  border-color: rgba(227, 179, 65, .75);
+  color: #ffe599;
+}
+.action-btn.clear,
+.action-btn.red {
+  background: rgba(229, 83, 75, .18);
+  border-color: rgba(229, 83, 75, .5);
+  color: #ff9d94;
+}
+.action-btn.clear:hover,
+.action-btn.red:hover {
+  background: rgba(229, 83, 75, .28);
+  border-color: rgba(229, 83, 75, .75);
+  color: #ffc2bc;
+}
 .action-btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 
 .solution-draft { margin-top: .8rem; }

@@ -160,6 +160,20 @@ export const DEFAULT_ACTIONS = [
 /** Not an action: pressing it wipes the solution built so far. */
 export const CLEAR_LABEL = 'clear';
 
+/** Colour class for known action buttons. */
+export const ACTION_COLORS = {
+  'block 1d': 'blue',
+  'block 2d': 'blue',
+  'block uphill': 'blue',
+  'dodge': 'yellow',
+  'catch': 'yellow',
+  'clear': 'red',
+};
+
+export function actionColor(label) {
+  return ACTION_COLORS[String(label ?? '').trim().toLowerCase()] || '';
+}
+
 /** The button labels for a puzzle (fixed defaults, or the puzzle's own list). */
 export function actionsFor(p) {
   return Array.isArray(p?.actions) && p.actions.length ? p.actions : DEFAULT_ACTIONS;
@@ -265,9 +279,12 @@ export function setId(puzzles) {
  * Buttons carry their label in data-action; app.js appends it to the draft.
  */
 export function actionButtonsHtml(p) {
-  const buttons = actionsFor(p)
-    .map(a => `<button type="button" class="action-btn" data-action="${esc(a)}">${esc(a)}</button>`);
-  buttons.push(`<button type="button" class="action-btn clear" data-clear="1">${esc(CLEAR_LABEL)}</button>`);
+  const buttons = actionsFor(p).map(a => {
+    const color = actionColor(a);
+    const cls = color ? `action-btn ${color}` : 'action-btn';
+    return `<button type="button" class="${cls}" data-action="${esc(a)}">${esc(a)}</button>`;
+  });
+  buttons.push(`<button type="button" class="action-btn clear red" data-clear="1">${esc(CLEAR_LABEL)}</button>`);
   return buttons.join('');
 }
 
