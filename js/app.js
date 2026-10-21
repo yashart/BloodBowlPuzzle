@@ -1,7 +1,7 @@
 /* ============================================================
-   app.js — the quiz itself: play each puzzle by pressing the
-   action buttons, optionally predict the odds, then see the
-   correct odds and the full solution. No win/lose verdict.
+   app.js — landing + quiz: browse categories/sets, then play
+   each puzzle by pressing action buttons, optionally predict
+   the odds, then see the correct odds and the full solution.
    ============================================================ */
 
 import {
@@ -19,11 +19,13 @@ const app = () => $('#app');
 const state = {
   puzzles: [],
   idx: 0,
-  answers: [],       // {guess, answer, error, steps}  (guess/error null when odds were skipped)
+  answers: [],
   runId: '',
   finished: false,
   submitted: null,
   savedProgress: null,
+  setFile: '',
+  setMeta: null,
 };
 
 /* ----------------------------------------------------------- storage */
@@ -50,15 +52,78 @@ function clearProgress() {
   try { localStorage.removeItem(PROGRESS_KEY + state.runId); } catch { /* ignore */ }
 }
 
+/* ----------------------------------------------------------- set param + sets manifest */
+
+function getSetFile() {
+  const sp = new URLSearchParams(location.search);
+  // support ?set=, ?puzzles=, ?deck=, ?file=
+  const raw = sp.get('set') || sp.get('puzzles') || sp.get('deck') || sp.get('file') || '';
+  const trimmed = String(raw).trim();
+  // sanitize: allow relative paths, but block absolute urls / protocol
+  if (!trimmed) return '';
+  if (/^(https?:)?\/\//i.test(trimmed) || /^[a-z]+:/i.test(trimmed)) return '';
+  if (trimmed.includes('..')) return '';
+  return trimmed;
+}
+
+async function loadSetsManifest() {
+  try {
+    const res = await fetch('sets.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (!json || !Array.isArray(json.categories)) throw new Error('Missing categories array');
+    return json;
+  } catch (e) {
+    return null;
+  }
+}
+
+function playUrl(file) {
+  return `play.html?set=${encodeURIComponent(file)}`;
+}
+
 /* ----------------------------------------------------------- boot */
 
 async function boot() {
   badge();
-  try {
-    state.puzzles = await loadPuzzles('puzzles.json');
-  } catch (err) {
-    return screenError('Cannot load puzzles.json', err.message);
+  const setFile = getSetFile();
+  const isPlayPage = document.body.dataset.page === 'play';
+
+  // A set requested on the landing page: hand over to the player page so the
+  // URL always says where you are (and old bookmarks keep working).
+  if (setFile && !isPlayPage) {
+    location.replace('play.html?' + new URLSearchParams({ set: setFile }).toString());
+    return;
   }
+  // play.html without a set falls back to the root puzzles.json
+  if (isPlayPage) {
+    return bootPlay(setFile || 'puzzles.json');
+  }
+  return bootLanding();
+}
+
+async function bootPlay(setFile) {
+  state.setFile = setFile;
+  document.body.dataset.page = 'play';
+
+  try {
+    state.puzzles = await loadPuzzles(setFile);
+  } catch (err) {
+    return screenError(`Cannot load ${esc(setFile)}`, err.message, true);
+  }
+  // try to enrich setMeta from sets.json (optional)
+  try {
+    const manifest = await loadSetsManifest();
+    if (manifest) {
+      for (const cat of manifest.categories) {
+        for (const s of (cat.sets || [])) {
+          if (s.file === setFile) state.setMeta = s;
+        }
+      }
+    }
+  } catch { /* ignore */ }
+  if (!state.setMeta) state.setMeta = { title: setFile, file: setFile };
+
   state.runId = setId(state.puzzles);
 
   const saved = loadProgress(state.runId);
@@ -72,6 +137,25 @@ async function boot() {
   }
 }
 
+async function bootLanding() {
+  document.body.dataset.page = 'landing';
+
+  let manifest = await loadSetsManifest();
+  if (!manifest) {
+    // fallback minimal manifest if sets.json missing
+    manifest = {
+      title: 'Blood Bowl Puzzles',
+      categories: [{
+        id: 'all',
+        title: 'Game basics',
+        sets: [{ id: 'default', title: 'Complete deck', file: 'puzzles.json', count: null }],
+      }],
+    };
+  }
+
+  screenLanding(manifest);
+}
+
 function badge() {
   const el = $('#lb-badge');
   if (!el) return;
@@ -82,27 +166,95 @@ function badge() {
 
 /* ----------------------------------------------------------- screens */
 
-function screenError(title, message) {
+function screenError(title, message, isPlay = false) {
+  const back = isPlay ? `<a class="btn btn-ghost" href="index.html">← Back to all sets</a>` : '';
   app().innerHTML = `
     <div class="zen-page">
     <div class="card">
       <h1>⚠️ ${esc(title)}</h1>
       <div class="err-box small">${esc(message)}</div>
       <p class="muted small" style="margin-top:.8rem">
-        Checklist: <code>puzzles.json</code> must sit next to <code>index.html</code>;
+        Checklist: <code>${esc(state.setFile || 'puzzles.json')}</code> must exist next to <code>index.html</code>;
         the file must be valid JSON (run it through a JSON validator);
         and the page should be served over http(s) — browsers refuse to read local JSON from <code>file://</code>.
       </p>
-      <div class="btn-row"><button class="primary" onclick="location.reload()">Try again</button>
+      <div class="btn-row" style="margin-top:.8rem"><button class="primary" onclick="location.reload()">Try again</button>
+      ${back}
       <a class="btn btn-ghost" href="editor.html">Open the puzzle editor</a></div>
     </div>
     </div>`;
 }
 
+/* ---------------- landing ---------------- */
+
+const DIFFICULTY_LABELS = { easy: 'easy', medium: 'medium', hard: 'hard', mixed: 'mixed' };
+
+/** "1 puzzle" / "4 puzzles" — with the difficulty in the same breath. */
+function packMetaHtml(s) {
+  const n = Number(s.count);
+  const hasCount = s.count !== null && s.count !== undefined && s.count !== '' && Number.isFinite(n);
+  const diff = DIFFICULTY_LABELS[String(s.difficulty || '').toLowerCase()] || '';
+  const diffChip = diff ? `<span class="chip ${diff}">${esc(diff)}</span>` : '';
+  const count = hasCount ? `${n} puzzle${n === 1 ? '' : 's'}` : '';
+  return `${diffChip}${count ? `<span class="pack-count">${esc(count)}</span>` : ''}`;
+}
+
+/** One pack: preview picture, its name, what is inside, and how to start it. */
+function setCardHtml(s) {
+  const title = s.title || s.id;
+  const meta = packMetaHtml(s);
+  const cover = s.cover
+    ? `<img src="${esc(s.cover)}" alt="" loading="lazy" decoding="async">`
+    : '<span class="set-cover-empty">no preview</span>';
+  const tip = s.description ? `${s.description} — ${title}` : title;
+
+  return `
+    <article class="set-card">
+      <a class="set-cover" href="${esc(playUrl(s.file))}" tabindex="-1" aria-hidden="true">${cover}</a>
+      <div class="set-body">
+        <h3 class="set-title">${esc(title)}</h3>
+        <div class="set-meta">${meta}</div>
+        <div class="set-actions">
+          <a class="btn primary btn-sm" href="${esc(playUrl(s.file))}" title="${esc(tip)}">Play</a>
+          <a class="set-file mono" href="${esc(s.file)}" target="_blank" rel="noopener"
+             title="Open the puzzles.json file this pack plays">puzzles.json</a>
+        </div>
+      </div>
+    </article>`;
+}
+
+function categoryHtml(cat) {
+  const cards = (cat.sets || []).map(setCardHtml).join('');
+  return `
+    <section class="category" id="cat-${esc(cat.id)}">
+      <h2 class="category-title">${esc(cat.title)}</h2>
+      ${cards
+        ? `<div class="set-grid">${cards}</div>`
+        : '<p class="muted small">No packs in this category yet.</p>'}
+    </section>`;
+}
+
+function screenLanding(manifest) {
+  app().innerHTML = `
+    <div class="landing-hero">
+      <h1 class="landing-title">${esc(manifest.title || 'Blood Bowl Puzzles')}</h1>
+      <a class="btn primary" href="editor.html">Create new set</a>
+    </div>
+
+    <div class="landing-categories">
+      ${manifest.categories.map(categoryHtml).join('')}
+    </div>`;
+}
+
 function screenResume(saved) {
   const n = state.puzzles.length;
+  const setLabel = state.setMeta ? esc(state.setMeta.title) : esc(state.setFile);
   app().innerHTML = `
     <div class="zen-page">
+      <div class="zen-back">
+        <a href="index.html" class="back-link">← All sets</a>
+        <span class="muted small" style="margin-left:.6rem">${setLabel} · ${esc(state.setFile)}</span>
+      </div>
       <div class="banner">
         <div style="flex:1 1 320px">
           <b>Unfinished run found.</b>
@@ -186,8 +338,16 @@ function screenRun() {
     ...p.tags.map(t => `<span class="chip tag">${esc(t)}</span>`),
   ].join('');
 
+  const setLabel = state.setMeta ? esc(state.setMeta.title) : esc(state.setFile);
+  const setFileLabel = esc(state.setFile);
+
   app().innerHTML = `
     <div class="zen">
+      <div class="zen-back">
+        <a href="index.html" class="back-link">← All sets</a>
+        <span class="badge" style="margin-left:.5rem">${setLabel}</span>
+        <span class="muted small mono" style="margin-left:.4rem; opacity:.7">${setFileLabel}</span>
+      </div>
       ${progressHtml()}
       <div class="zen-main">
         <div class="zen-sheet">
@@ -224,6 +384,7 @@ function screenRun() {
           </div>
           <div class="btn-row btn-center">
             <button class="link-btn" id="btn-restart" title="Clear this run and start again">Restart run</button>
+            <a class="link-btn" href="index.html">Change set</a>
           </div>
         </div>
         <div id="reveal"></div>
@@ -402,11 +563,17 @@ function screenResults() {
     ? `<div class="stat"><b>${fmtPct(s.meanError, 2)}</b><span>mean error${s.ci ? ' (90% CI ' + fmtPct(s.ci.lo, 1) + ' – ' + fmtPct(s.ci.hi, 1) + ')' : ''}</span></div>`
     : '';
 
+  const setLabel = state.setMeta ? esc(state.setMeta.title) : esc(state.setFile);
+
   app().innerHTML = `
     <div class="zen-page">
+      <div class="zen-back">
+        <a href="index.html" class="back-link">← All sets</a>
+        <span class="muted small" style="margin-left:.6rem">${setLabel}</span>
+      </div>
       <div class="results-head">
         <h1>Run finished</h1>
-        <p class="muted">Here are the correct odds and the full solution for every puzzle.</p>
+        <p class="muted">Here are the correct odds and the full solution for every puzzle in <b>${setLabel}</b>.</p>
       </div>
       <div class="stats-row">
         <div class="stat"><b>${s.played}</b><span>puzzles played</span></div>
@@ -421,6 +588,7 @@ function screenResults() {
 
       <div class="btn-row btn-center zen-actions">
         <button class="primary btn-lg" id="btn-again">Run again</button>
+        <a class="btn btn-ghost" href="index.html">Browse other sets</a>
       </div>
     </div>`;
 

@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "puzzles": [
+    {
+      "id": "base-puzzles-05",
+      "title": "Human TD",
+      "difficulty": "easy",
+      "tags": [],
+      "image": "images/puzzle-04.png",
+      "imageAlt": "",
+      "task": "Score Human TD. **0 rr**.",
+      "question": "What are the odds? (%)",
+      "legend": [
+        {
+          "name": "T - Thrower",
+          "skills": [
+            "Sure Hands",
+            "Pass"
+          ],
+          "note": "MA 6 ST 3 AG 3+ PA 3+",
+          "color": "blue"
+        },
+        {
+          "name": "C - Catcher",
+          "skills": [
+            "Dodge",
+            "Catch"
+          ],
+          "note": "MA 8 ST 3 AG 3+",
+          "color": "blue"
+        },
+        {
+          "name": "L - Lineman",
+          "skills": [],
+          "note": "MA 6 ST 3 AG 3+",
+          "color": "red"
+        }
+      ],
+      "answer": 72,
+      "exact": "",
+      "solution": "The odds are the same: pass first and next dodge, or dodge first and pass in Touchdown zone.",
+      "author": "mr_mesmer",
+      "tolerance": 5
+    }
+  ]
+}

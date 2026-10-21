@@ -1,6 +1,6 @@
 <h1 align="center">Blood Bowl Puzzles</h1>
-<p align="center">A static quiz site: read a Blood Bowl situation, build the play with the action buttons ("block 2d, dodge…"),
-and compare your answer with the correct play and — optionally — the real odds.</p>
+<p align="center">A static quiz site: pick a puzzle set by category, read a Blood Bowl situation, build the play with the action
+buttons ("block 2d, dodge…"), and compare your answer with the correct play and — optionally — the real odds.</p>
 
 ---
 
@@ -10,7 +10,7 @@ For every puzzle the player gets a pitch image, the mission text ("score the tou
 skills in this puzzle**, and a panel of action buttons:
 
 ```
-block 1d   block 2d   block uphill   dodge   gfi   pass   catch   clear
+block 1d   block 2d   block 3d   block uphill   dodge   gfi   pass   catch   clear
 ```
 
 Every press appends that button's label to **Your solution**, so pressing *block 2d* and then *dodge* gives
@@ -25,13 +25,65 @@ Every press appends that button's label to **Your solution**, so pressing *block
 At the end of the run there is a **recap** with the correct odds and the solution for every puzzle, plus how many
 puzzles were played and, if any odds were predicted, their mean error.
 
+## Landing page and sets
+
+`index.html` is a **landing page, not the quiz**. It shows the site title and a **Create new set** button, then every
+pack as a card grouped by category: a preview picture, the pack name, a difficulty chip with how many puzzles it holds,
+a **Play** button and a `puzzles.json` link to the deck file itself.
+
+Each set is a self-contained deck file in exactly the same format as the root `puzzles.json`
+(`{ "version": 1, "puzzles": [ … ] }` — a bare array works too). The demo catalogue ships with:
+
+```
+sets.json
+puzzles.json                            the complete deck (every puzzle)
+puzzles/game-basics-easy.json           Game basics: easy
+puzzles/game-basics-advanced.json       Game basics: advanced
+puzzles/mr-mesmer.json                  mr_mesmer's pack
+```
+
+The landing page shows two categories:
+
+* **Game basics** — `Game basics: easy` (1 puzzle) and `Game basics: advanced` (4 puzzles), split by difficulty.
+* **Users packs** — one pack per author, e.g. `mr_mesmer's pack` (the 4 puzzles he wrote).
+
+To add a category or a set, edit `sets.json` — nothing else:
+
+```json
+{
+  "id": "my-cup",
+  "title": "My Tournament",
+  "description": "Puzzles from last weekend.",
+  "sets": [
+    {
+      "id": "round-1",
+      "title": "Round 1 — Bash",
+      "file": "puzzles/round-1.json",
+      "count": 2,
+      "difficulty": "hard",
+      "cover": "images/puzzle-01.png",
+      "description": "Two puzzles, no rerolls."
+    }
+  ]
+}
+```
+
+`count` is what the card shows as “N puzzles” (leave it out and only the difficulty chip is printed), `cover` is the
+preview picture and `description` is used as the tooltip. The deck itself is whatever the file contains. A set is also
+playable directly, without visiting the landing page:
+`play.html?set=puzzles/round-1.json`. `play.html` without `?set=` falls back to the root `puzzles.json`, and
+`index.html?set=…` simply redirects to `play.html?set=…`.
+
 ## Files
 
 ```
-index.html              the quiz
+index.html              landing page: categories → puzzle sets (reads sets.json)
+play.html               the quiz (?set=path/to/deck.json)
+sets.json               the catalogue rendered by the landing page
+puzzles/                themed decks, same format as puzzles.json
 editor.html             puzzle editor (form → live JSON → export)
 guide.html              how it works + hosting/Firebase instructions
-puzzles.json            the deck — the only content file you normally touch
+puzzles.json            the default deck — the only content file you normally touch
 css/style.css           all styling
 js/app.js               quiz flow: action buttons, optional odds, reveal, recap
 js/engine.js            markdown subset, action panel builders, statistics, puzzle loading/validation
@@ -85,12 +137,15 @@ there so GitHub serves the folders as-is.
 
 ## Adding puzzles
 
-Everything lives in `puzzles.json`. Author them in the browser:
+Add puzzles to whichever deck the landing page should offer — a file under `puzzles/`, or the root `puzzles.json`. Author them in the browser:
 
-1. Open `editor.html` (locally or on the deployed site).
+1. Open `editor.html` (locally or on the deployed site). The export always starts **empty**, so you build a clean set
+   from scratch — nothing is loaded automatically. To continue an existing deck, press **Load deployed puzzles.json** or
+   **Import JSON file…**; **Clear export** empties it again at any time.
 2. Fill the form, watch the JSON and the live preview on the right.
 3. **Add to export** for every puzzle — the deck order is the playing order.
-4. **Download puzzles.json** and commit it over the old one. Put new images into `images/`.
+4. **Download puzzles.json** and commit it over the old one (or into `puzzles/` as a new set, then list it in
+   `sets.json`). Put new images into `images/`.
 5. Reload the site: the new deck is live. No rebuild, no deploy step.
 
 A single puzzle looks like this:
@@ -126,11 +181,29 @@ chips so the legend matches the markers on the pitch image (cosmetic only, omit 
 markdown subset — `**bold**`, `` `code` ``, `- ` bullets, blank lines for paragraphs. HTML is escaped, so anything you
 paste is rendered literally.
 
-### Pitch images
+### Pitch images: a local file or a link
 
-Use whatever you like — a screenshot from the video game, a photo of your tabletop board, or an exported SVG. Reference
-it relative to the site root (`images/...`). The demo diagrams in `images/` were generated from coordinates by
-`site-src/generate_images.py`; feel free to delete them.
+Use whatever you like — a screenshot from the video game, a photo of your tabletop board, or an exported SVG. The
+`image` field takes either form:
+
+```json
+"image": "images/puzzle-01.png"                        // a file in the site
+"image": "https://example.com/pitches/bb-final.png"    // a link to an image on the web
+```
+
+The editor accepts both: paste an `https://…` link (quotes, angle brackets and stray spaces around it are trimmed) or
+type a path. In the editor preview the source is labelled 🌐 **link** or 📁 **local file**, with an *open ↗* link so you
+can check it loads. Links must point at the image itself — a gallery/file-sharing page (`drive.google.com/file/d/…`,
+an Imgur page) will not render, and the editor says so; for Google Drive use
+`https://drive.google.com/uc?export=view&id=<FILE_ID>`.
+
+Accepted values are relative paths, `http(s)` links, protocol-relative `//host/…` links and `data:image/…`. Anything
+else (`javascript:`, `file:`, `ftp:`…) is rejected with an error, both in the editor and when a deck is loaded — so a
+bad value never ends up as a broken `<img>`. Remote images are requested with `referrerpolicy="no-referrer"`, which
+keeps most hotlink protection from blanking them; if a host still refuses, download the file into `images/` instead.
+
+The demo diagrams in `images/` were generated from coordinates by `site-src/generate_images.py`; feel free to delete
+them.
 
 ## Shared leaderboard (Firebase, free tier)
 

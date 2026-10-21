@@ -3,26 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Blood Bowl Puzzles — how would you play it?</title>
-<meta name="description" content="Blood Bowl puzzles: read the situation, build the play with action buttons, and optionally predict the odds. See the correct solution and odds at the end.">
+<title>Blood Bowl Puzzles — pick a set and play</title>
+<meta name="description" content="Blood Bowl puzzles by category: pick a puzzle set and play.">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#0d1015">
 <link rel="icon" href="images/favicon.svg">
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body data-page="play">
+<body data-page="landing">
 
 <main class="wrap" id="app">
-  <div class="zen-page center">
+  <div class="center">
     <span class="spinner"></span>
-    <p class="muted" style="margin-top:.6rem">Loading puzzles…</p>
+    <p class="muted" style="margin-top:.6rem">Loading sets…</p>
   </div>
 </main>
 
 <script>
-/* Safety net for stale module caching: after a deploy the browser can pair a
-   fresh app.js with an old engine.js and refuse the named import, leaving a
-   blank page. Detect that and offer a reload instead of failing silently. */
 (function () {
   var shown = false;
   function offerReload(msg) {

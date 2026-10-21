@@ -1,0 +1,44 @@
+{
+  "title": "Blood Bowl Puzzles",
+  "categories": [
+    {
+      "id": "game-basics",
+      "title": "Game basics",
+      "sets": [
+        {
+          "id": "game-basics-easy",
+          "title": "Game basics: easy",
+          "file": "puzzles/game-basics-easy.json",
+          "description": "One simple scoring play to learn the flow: read the pitch, build the action sequence, guess the odds.",
+          "difficulty": "easy",
+          "count": 1,
+          "cover": "images/puzzle-04.png"
+        },
+        {
+          "id": "game-basics-advanced",
+          "title": "Game basics: advanced",
+          "file": "puzzles/game-basics-advanced.json",
+          "description": "Dodging through tackle zones, blitzing a Mummy and breaking a snotling's armour — with and without rerolls.",
+          "difficulty": "medium",
+          "count": 4,
+          "cover": "images/puzzle-02.png"
+        }
+      ]
+    },
+    {
+      "id": "users-packs",
+      "title": "Users packs",
+      "sets": [
+        {
+          "id": "mr-mesmer",
+          "title": "mr_mesmer's pack",
+          "file": "puzzles/mr-mesmer.json",
+          "description": "Every puzzle authored by mr_mesmer: the Human touchdown, both Skaven dodges and the snotling hunt.",
+          "difficulty": "mixed",
+          "count": 4,
+          "cover": "images/puzzle-03.png"
+        }
+      ]
+    }
+  ]
+}

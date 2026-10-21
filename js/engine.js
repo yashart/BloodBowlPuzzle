@@ -154,7 +154,7 @@ export function legendColorOptions(selected = '') {
  * A puzzle may override the list with its own `actions` array.
  */
 export const DEFAULT_ACTIONS = [
-  'block 1d', 'block 2d', 'block uphill', 'dodge', 'gfi', 'pass', 'catch',
+  'block 1d', 'block 2d', 'block 3d', 'block uphill', 'dodge', 'gfi', 'pass', 'catch',
 ];
 
 /** Not an action: pressing it wipes the solution built so far. */
@@ -164,6 +164,7 @@ export const CLEAR_LABEL = 'clear';
 export const ACTION_COLORS = {
   'block 1d': 'blue',
   'block 2d': 'blue',
+  'block 3d': 'blue',
   'block uphill': 'blue',
   'dodge': 'yellow',
   'catch': 'yellow',
@@ -182,6 +183,75 @@ export function actionsFor(p) {
 /** "block 2d, dodge" — how a list of actions is shown and stored as text. */
 export function solutionText(steps) {
   return (Array.isArray(steps) ? steps : []).filter(Boolean).join(', ');
+}
+
+/* ----------------------------------------------------------- image sources */
+
+/**
+ * A puzzle image may be either a path inside the site (`images/pitch.png`) or a
+ * full link to an image anywhere on the web (`https://cdn.example.org/pitch.png`).
+ * Authors routinely paste links with stray spaces, quotes or angle brackets
+ * around them, so those get trimmed here.
+ */
+export function normalizeImageSrc(value) {
+  let s = String(value ?? '').trim();
+  if (!s) return '';
+  // "<https://…>", ""https://…"" and "'https://…'" — typical paste artefacts.
+  s = s.replace(/^<+/, '').replace(/>+$/, '').trim();
+  s = s.replace(/^["']+/, '').replace(/["']+$/, '').trim();
+  return s;
+}
+
+/** 'url' for a remote link, 'path' for a file next to the site, '' for empty. */
+export function imageSrcKind(value) {
+  const s = normalizeImageSrc(value);
+  if (!s) return '';
+  if (/^(https?:)?\/\//i.test(s) || /^data:image\//i.test(s)) return 'url';
+  if (/^[a-z][a-z0-9+.-]*:/i.test(s)) return 'bad';
+  return 'path';
+}
+
+/**
+ * Why an image value cannot be used, as a sentence — or '' when it is fine.
+ * Relative paths, http(s) links, protocol-relative links and data:image/… are
+ * accepted; anything else (javascript:, ftp:, file:, a Google Drive *page*
+ * link, a value with spaces) is rejected with a readable reason.
+ */
+export function imageSrcProblem(value) {
+  const s = normalizeImageSrc(value);
+  if (!s) return '';
+  if (/\s/.test(s)) return 'the image value contains spaces — remove them or percent-encode them as %20.';
+  const kind = imageSrcKind(s);
+  if (kind === 'bad') {
+    return 'only relative paths (images/pitch.png), http(s) links, or data:image/… are allowed for the image.';
+  }
+  return '';
+}
+
+/**
+ * Non-fatal advice about an image value (editor only): links that point at a
+ * page instead of at the image file itself will simply never render.
+ */
+export function imageSrcWarning(value) {
+  const s = normalizeImageSrc(value);
+  if (!s || imageSrcProblem(s)) return '';
+  const hasExt = /\.(png|jpe?g|gif|webp|avif|svg)(\?|#|$)/i.test(s);
+
+  // A Drive /file/d/… link is the preview page; the uc?export=view form is the file.
+  if (/^https?:\/\/drive\.google\.com\/file\/d\//i.test(s)) {
+    return 'this is a Google Drive page link, not the image itself — use https://drive.google.com/uc?export=view&id=<FILE_ID> instead.';
+  }
+  if (/^https?:\/\/(www\.)?imgur\.com\//i.test(s) && !/^https?:\/\/i\.imgur\.com\//i.test(s) && !hasExt) {
+    return 'this is an Imgur page link, not the image — use the direct i.imgur.com/….png address instead.';
+  }
+  if (!hasExt && /^https?:\/\/(www\.)?(photos\.app\.goo\.gl|flickr\.com|photos\.google\.com|dropbox\.com|onedrive\.live\.com)\//i.test(s)) {
+    return 'this looks like a page rather than a direct image link — open the image itself and copy that address (it usually ends in .png, .jpg or .webp).';
+  }
+  return '';
+}
+
+export function isRemoteImage(value) {
+  return imageSrcKind(value) === 'url';
 }
 
 /* ----------------------------------------------------------- puzzle files */
@@ -207,6 +277,14 @@ function oddsAnswer(p, id) {
   const answer = Number(raw);
   if (answer < 0 || answer > 100) throw new Error(`Puzzle "${id}": "answer" must be between 0 and 100.`);
   return answer;
+}
+
+/** Normalised image value; throws when the author pasted something unusable. */
+function imageField(raw, id) {
+  const src = normalizeImageSrc(raw);
+  const problem = imageSrcProblem(src);
+  if (problem) throw new Error(`Puzzle "${id}": ${problem}`);
+  return src;
 }
 
 export function normalizePuzzle(p, i = 0) {
@@ -237,7 +315,7 @@ export function normalizePuzzle(p, i = 0) {
     title: String(p.title ?? id),
     difficulty: ['easy', 'medium', 'hard'].includes(p.difficulty) ? p.difficulty : 'medium',
     tags: Array.isArray(p.tags) ? p.tags.map(String).filter(Boolean) : [],
-    image: String(p.image ?? ''),
+    image: imageField(p.image, id),
     imageAlt: String(p.imageAlt ?? p.title ?? id),
     task: String(p.task ?? ''),
     question: String(p.question ?? 'What are the odds? (%)'),
@@ -299,8 +377,10 @@ export function stepsHtml(steps, empty = 'No action sequence was written for thi
 
 export function puzzleMediaHtml(p) {
   if (p.image) {
+    // referrerpolicy: many image hosts blank requests that carry a referer.
     return `<figure class="figure">
-      <img src="${esc(p.image)}" alt="${esc(p.imageAlt)}" loading="lazy">
+      <img src="${esc(p.image)}" alt="${esc(p.imageAlt)}" loading="lazy" decoding="async"
+           referrerpolicy="no-referrer">
     </figure>`;
   }
   return `<figure class="figure"><div class="muted center" style="padding:2rem 1rem">No image for this puzzle.</div></figure>`;

@@ -6,6 +6,7 @@
 import {
   esc, md, toast, normalizePuzzle, normalizeCollection, legendHtml,
   legendColor, legendColorOptions, actionButtonsHtml, stepsHtml,
+  normalizeImageSrc, imageSrcProblem, imageSrcWarning, isRemoteImage,
 } from './engine.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -60,7 +61,7 @@ function readForm() {
     title: $('#f-title').value.trim(),
     difficulty: $('#f-difficulty').value,
     tags: $('#f-tags').value.split(',').map(s => s.trim()).filter(Boolean),
-    image: $('#f-image').value.trim(),
+    image: normalizeImageSrc($('#f-image').value),
     imageAlt: $('#f-imagealt').value.trim(),
     task: $('#f-task').value.trim(),
     question: $('#f-question').value.trim() || 'What are the odds? (%)',
@@ -79,7 +80,7 @@ function writeForm(p) {
   $('#f-title').value = p.title || '';
   $('#f-difficulty').value = p.difficulty || 'medium';
   $('#f-tags').value = (p.tags || []).join(', ');
-  $('#f-image').value = p.image || '';
+  $('#f-image').value = normalizeImageSrc(p.image);
   $('#f-imagealt').value = p.imageAlt || '';
   $('#f-task').value = p.task || '';
   $('#f-question').value = p.question || 'What are the odds? (%)';
@@ -105,7 +106,16 @@ function validate(p) {
     if (!isFinite(p.answer)) errors.push('answer must be a number, or leave the field empty for a puzzle that asks only "how to play".');
     else if (p.answer < 0 || p.answer > 100) errors.push('answer must be between 0 and 100 (or empty for no odds).');
   }
-  if (!p.image) errors.push('image path is empty — the puzzle will render a "no image" placeholder. (Warning, not an error.)');
+  if (!p.image) {
+    errors.push('image is empty — paste a link (https://…) or point at a file in the site (images/pitch.png). The puzzle will render a "no image" placeholder. (Warning, not an error.)');
+  } else {
+    const problem = imageSrcProblem(p.image);
+    if (problem) errors.push('image: ' + problem);
+    else {
+      const advice = imageSrcWarning(p.image);
+      if (advice) errors.push('image: ' + advice + ' (Warning, not an error.)');
+    }
+  }
   if (!p.solution && !p.steps.length) errors.push('solution text is empty — players will see nothing after submitting. (Warning, not an error.)');
   return errors;
 }
@@ -132,20 +142,31 @@ function refresh() {
     status.innerHTML = err.map(e => '• ' + esc(e)).join('<br>');
   } else if (warn.length) {
     status.className = 'status';
-    status.innerHTML = warn.map(e => '• ' + esc(e)).join('<br>');
+    status.innerHTML = warn
+      .map(e => '• ' + esc(e.replace(/\s*\(Warning, not an error\.\)$/, '')))
+      .join('<br>');
   } else {
     status.className = 'status ok';
     status.textContent = 'Looks good — ready to export.';
   }
 
-  // preview
+  // preview — the image may be a local path or a link to the web
+  const remote = isRemoteImage(p.image);
   const img = p.image
-    ? `<img src="${esc(p.image)}" alt="${esc(p.imageAlt || p.title)}"
-         onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'muted small center',textContent:'Image not found: ${esc(p.image).replace(/'/g, '')} — put the file in the images/ folder.'}))">`
-    : `<div class="muted small center" style="padding:1.5rem">No image path yet.</div>`;
+    ? `<img src="${esc(p.image)}" alt="${esc(p.imageAlt || p.title)}" decoding="async"
+         referrerpolicy="no-referrer" data-src-kind="${remote ? 'url' : 'path'}">`
+    : `<div class="muted small center" style="padding:1.5rem">No image yet — paste a link or a path below.</div>`;
+
+  const imgSource = p.image
+    ? `<div class="img-source small muted">
+         <span>${remote ? '🌐 link' : '📁 local file'}</span>
+         <a href="${esc(p.image)}" target="_blank" rel="noopener noreferrer">open ↗</a>
+       </div>`
+    : '';
 
   $('#preview').innerHTML = `
     <div class="preview-frame">${img}</div>
+    ${imgSource}
     <h3 style="margin:.7rem 0 .2rem">${esc(p.title || 'untitled puzzle')}</h3>
     <div class="chips" style="margin-bottom:.5rem">
       <span class="chip ${['easy', 'medium', 'hard'].includes(p.difficulty) ? p.difficulty : 'medium'}">${esc(p.difficulty)}</span>
@@ -163,6 +184,19 @@ function refresh() {
         ? `${esc(p.question || '')} → correct odds <b>${isFinite(p.answer) ? esc(String(p.answer)) + '%' : '—'}</b>${p.exact ? ` <code>${esc(p.exact)}</code>` : ''}`
         : 'No odds for this puzzle — the player only builds the action sequence.'}
     </p>`;
+
+  // A broken image is the most common authoring mistake, so say what to fix
+  // and never echo the pasted URL back through an inline handler.
+  const previewImg = $('#preview img');
+  previewImg?.addEventListener('error', () => {
+    const box = document.createElement('div');
+    box.className = 'muted small center';
+    box.style.padding = '1.5rem';
+    box.textContent = remote
+      ? 'This link did not load an image. Check that it opens directly in a new tab and that the site allows hotlinking.'
+      : 'Image not found. Put the file into the images/ folder (path relative to index.html) or paste a link instead.';
+    previewImg.replaceWith(box);
+  });
 }
 
 /* ----------------------------------------------------------- deck */
@@ -176,7 +210,8 @@ function renderDeck() {
   }
   const host = $('#deck');
   if (!state.deck.length) {
-    host.innerHTML = `<p class="muted small">The deck is empty. Load <code>puzzles.json</code> (button above) or start building puzzles — every puzzle you add to the deck goes into the export.</p>`;
+    host.innerHTML = `<p class="muted small">The export is empty — fill in the form and press <b>Add to export</b> to put puzzles here.
+      To continue an existing set, use <b>Load deployed puzzles.json</b> or <b>Import JSON file…</b> above.</p>`;
     return;
   }
   host.innerHTML = `<div class="list-puzzles">${state.deck.map((p, i) => `
@@ -347,6 +382,17 @@ function wire() {
     e.target.value = '';
   });
 
+  $('#btn-clear-deck').addEventListener('click', () => {
+    if (!state.deck.length) { toast('The export is already empty'); return; }
+    if (!confirm(`Remove all ${state.deck.length} puzzle(s) from the export?`)) return;
+    state.deck = [];
+    state.deckSource = '';
+    state.dirtyDeck = false;
+    state.loadedFromFile = false;
+    renderDeck();
+    toast('Export cleared');
+  });
+
   $('#btn-download-deck').addEventListener('click', () => {
     if (!state.deck.length) { toast('The deck is empty'); return; }
     download('puzzles.json', puzzlesFileText());
@@ -380,10 +426,16 @@ function wire() {
 /* ----------------------------------------------------------- start */
 
 function start() {
+  // The editor always opens with an empty export: you are starting a fresh
+  // puzzle set. Existing decks are loaded on demand (button or file import).
+  state.deck = [];
+  state.deckSource = '';
+  state.dirtyDeck = false;
+  state.loadedFromFile = false;
+
   writeForm(blankPuzzle());
   renderDeck();
   wire();
-  $('#btn-load-file').click(); // try to pick up the deployed puzzles.json right away
 }
 
 start();

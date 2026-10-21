@@ -21,7 +21,8 @@
       <span>Blood Bowl <b>Puzzles</b><small>how it works</small></span>
     </a>
     <nav class="nav">
-      <a href="index.html">Play</a>
+      <a href="index.html">Puzzle sets</a>
+      <a href="play.html">Play the default deck</a>
       <a href="guide.html" aria-current="page">How it works</a>
       <a href="editor.html">Puzzle editor</a>
     </nav>
@@ -34,7 +35,7 @@
     <p>Each puzzle gives you a situation and a legend of the relevant skills. You answer in two independent ways:</p>
     <ul>
       <li><b>How to play (always):</b> press the action buttons in the order you would do them — <code>block 1d</code>,
-      <code>block 2d</code>, <code>block uphill</code>, <code>dodge</code>, <code>gfi</code>, <code>pass</code>,
+      <code>block 2d</code>, <code>block 3d</code>, <code>block uphill</code>, <code>dodge</code>, <code>gfi</code>, <code>pass</code>,
       <code>catch</code> — and your solution builds up under the panel, e.g. <code>block 2d, dodge</code>.
       <code>clear</code> starts it over. Submit and you get the correct sequence and the full worked solution.</li>
       <li><b>Odds prediction (optional):</b> if the puzzle carries a correct answer, a 0–100% slider appears as well.
@@ -83,11 +84,44 @@
   </div>
 
   <div class="card">
+    <h2>Adding a category or a set</h2>
+    <p>The landing page is driven by <code>sets.json</code>. A <b>category</b> has a title, a description and a list of
+    <b>sets</b>; every set points at its own <code>puzzles.json</code> file. The landing page shows one card per pack with
+    a preview picture, the pack name, its difficulty and puzzle count; <b>Play</b> starts the pack and the
+    <code>puzzles.json</code> link opens its deck file.</p>
+    <pre class="small"><code>{
+  "id": "users-packs",
+  "title": "Users packs",
+  "description": "Puzzles from last weekend.",
+  "sets": [
+    {
+      "id": "round-1",
+      "title": "Round 1 — Bash",
+      "file": "puzzles/round-1.json",
+      "count": 2,
+      "difficulty": "hard",
+      "cover": "images/puzzle-01.png",
+      "description": "Two puzzles, no rerolls."
+    }
+  ]
+}</code></pre>
+    <p class="small muted"><code>count</code> is optional and printed as “N puzzles”; <code>cover</code> is the preview
+    picture on the card and <code>description</code> its tooltip. The pack always plays whatever the JSON file actually
+    contains.</p>
+    <p class="small">A set is also playable directly, without the landing page:
+    <code>play.html?set=puzzles/round-1.json</code>. Links are relative, so this works just as well on GitHub Pages.</p>
+  </div>
+
+  <div class="card">
     <h2>Adding puzzles</h2>
     <ol>
-      <li>Open the <a href="editor.html">puzzle editor</a>, fill in the form, watch the JSON and the preview, then <b>Add to export</b>.</li>
+      <li>Open the <a href="editor.html">puzzle editor</a>, fill in the form, watch the JSON and the preview, then <b>Add to export</b>.
+      The export starts empty on every visit — <b>Clear export</b> empties it again, and <b>Load deployed puzzles.json</b> /
+      <b>Import JSON file…</b> bring an existing deck back in.</li>
       <li>Press <b>Download puzzles.json</b>.</li>
-      <li>Put your pitch images into the <code>images/</code> folder and reference them as <code>images/your-file.png</code>.</li>
+      <li>For the pitch image you can either put a file into the <code>images/</code> folder and reference it as
+      <code>images/your-file.png</code>, or paste a link to an image on the web
+      (<code>https://…/pitch.png</code>). Links must point at the image itself, not at a gallery page.</li>
       <li>Commit the new <code>puzzles.json</code> and images. The site picks them up on the next page load — no rebuild.</li>
     </ol>
     <p class="muted small">The deck order in the editor is the order the player sees. Deeper puzzles usually work better late in a run.</p>
@@ -98,9 +132,12 @@
     <div class="table-wrap"><table class="board">
       <thead><tr><th>File</th><th>Role</th></tr></thead>
       <tbody>
-        <tr><td class="mono">index.html</td><td>The quiz: puzzle screen, action panel, optional odds slider, reveal, recap.</td></tr>
-        <tr><td class="mono">editor.html</td><td>The puzzle authoring form with live JSON and preview.</td></tr>
-        <tr><td class="mono">puzzles.json</td><td>The deck itself. This is the only file you edit to add content.</td></tr>
+        <tr><td class="mono">index.html</td><td>The landing page: puzzle sets grouped by category, each linking to its own <code>puzzles.json</code>.</td></tr>
+        <tr><td class="mono">play.html</td><td>The quiz: puzzle screen, action panel, optional odds slider, reveal, recap. Reads <code>?set=path/to/puzzles.json</code>.</td></tr>
+        <tr><td class="mono">sets.json</td><td>The catalogue the landing page renders: categories and the sets (deck files) inside each.</td></tr>
+        <tr><td class="mono">puzzles/</td><td>The packs shown on the landing page, e.g. <code>puzzles/game-basics-advanced.json</code> — just more <code>puzzles.json</code> files.</td></tr>
+        <tr><td class="mono">editor.html</td><td>The puzzle authoring form with live JSON and preview; its export starts empty so each session builds a fresh set.</td></tr>
+        <tr><td class="mono">puzzles.json</td><td>The default deck, and the one <code>play.html</code> falls back to without <code>?set=</code>.</td></tr>
         <tr><td class="mono">js/app.js</td><td>Quiz flow: action buttons, optional odds, reveal and recap.</td></tr>
         <tr><td class="mono">js/engine.js</td><td>Markdown subset, statistics (t-interval, Wilson), puzzle loading and validation.</td></tr>
         <tr><td class="mono">js/leaderboard.js</td><td>Firebase or localStorage leaderboard behind one API.</td></tr>
