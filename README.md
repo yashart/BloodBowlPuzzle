@@ -27,11 +27,9 @@ puzzles were played and, if any odds were predicted, their mean error.
 
 ## Landing page and sets
 
-`index.html` is a **landing page, not the quiz**. It renders `sets.json`, which groups decks into categories, and
-every card links to:
-
-* **Play** → `play.html?set=<path to that deck>`, the quiz itself,
-* **View JSON** → the raw `puzzles.json` file of that set, so the deck can be inspected or downloaded.
+`index.html` is a **landing page, not the quiz**. It is deliberately plain: the site title, a **Create new set** button,
+and every deck grouped by category as one row — pack name, number of puzzles, and a small `json` link to the raw deck.
+Clicking the row opens `play.html?set=<path to that deck>`; the `json` link opens the deck file itself.
 
 Each set is a self-contained deck file in exactly the same format as the root `puzzles.json`
 (`{ "version": 1, "puzzles": [ … ] }` — a bare array works too). The demo catalogue ships with:
@@ -58,18 +56,16 @@ To add a category or a set, edit `sets.json` — nothing else:
       "id": "round-1",
       "title": "Round 1 — Bash",
       "file": "puzzles/round-1.json",
-      "description": "Two puzzles, no rerolls.",
-      "difficulty": "hard",
       "count": 2,
-      "tags": ["block"],
-      "cover": "images/puzzle-01.png"
+      "description": "Two puzzles, no rerolls."
     }
   ]
 }
 ```
 
-`difficulty` is `easy` / `medium` / `hard` / `mixed`; `count`, `tags` and `cover` are optional decoration — the card
-always plays what the deck file actually contains. A set is also playable directly, without visiting the landing page:
+`count` is what the row shows as “N puzzles” (leave it out and the row just shows the pack name); `description` is only
+used as the hover tooltip. The deck itself is whatever the file contains. A set is also playable directly, without
+visiting the landing page:
 `play.html?set=puzzles/round-1.json`. `play.html` without `?set=` falls back to the root `puzzles.json`, and
 `index.html?set=…` simply redirects to `play.html?set=…`.
 

@@ -4,44 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Blood Bowl Puzzles — pick a set and play</title>
-<meta name="description" content="Blood Bowl puzzles by category: scoring, dodging, blocking and more. Pick a puzzle set, build the play and compare with the solution.">
+<meta name="description" content="Blood Bowl puzzles by category: pick a puzzle set and play.">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#0d1015">
 <link rel="icon" href="images/favicon.svg">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-page="landing">
-<header class="site-header">
-  <div class="wrap">
-    <a class="brand" href="index.html" aria-label="Blood Bowl Puzzles — home">
-      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true">
-        <ellipse cx="16" cy="16" rx="10" ry="13" fill="#e8e2d4" stroke="#0d1015" stroke-width="2"/>
-        <path d="M16 6.5v19M11.5 11h9M11.5 16h9M11.5 21h9" stroke="#b03030" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      <span>Blood Bowl <b>Puzzles</b><small>by category</small></span>
-    </a>
-    <nav class="nav" aria-label="Primary">
-      <a href="index.html" aria-current="page">Sets</a>
-      <a href="guide.html">How it works</a>
-      <a href="editor.html">Puzzle editor</a>
-    </nav>
-    <span class="badge" id="lb-badge" title="Leaderboard mode">Loading…</span>
-  </div>
-</header>
 
 <main class="wrap" id="app">
-  <div class="zen-page center">
+  <div class="center">
     <span class="spinner"></span>
     <p class="muted" style="margin-top:.6rem">Loading sets…</p>
   </div>
 </main>
-
-<footer class="site-footer">
-  <div class="wrap">
-    <span>Blood Bowl Puzzles — unofficial fan project. Blood Bowl is a trademark of Games Workshop.</span>
-    <span><a href="guide.html">How it works</a> · <a href="editor.html">Editor</a> · <a href="sets.json">sets.json</a></span>
-  </div>
-</footer>
 
 <script>
 (function () {

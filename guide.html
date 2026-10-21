@@ -86,8 +86,9 @@
   <div class="card">
     <h2>Adding a category or a set</h2>
     <p>The landing page is driven by <code>sets.json</code>. A <b>category</b> has a title, a description and a list of
-    <b>sets</b>; every set points at its own <code>puzzles.json</code> file, and that is the file the <b>View JSON</b>
-    link on the card opens.</p>
+    <b>sets</b>; every set points at its own <code>puzzles.json</code> file. The landing page shows one row per set with
+    just the pack name and how many puzzles it holds; the row plays the set and the small <code>json</code> link opens the
+    deck file.</p>
     <pre class="small"><code>{
   "id": "my-cup",
   "title": "My Tournament",
@@ -97,17 +98,13 @@
       "id": "round-1",
       "title": "Round 1 — Bash",
       "file": "puzzles/round-1.json",
-      "description": "Two puzzles, no rerolls.",
-      "difficulty": "hard",
       "count": 2,
-      "tags": ["block"],
-      "cover": "images/puzzle-01.png"
+      "description": "Two puzzles, no rerolls."
     }
   ]
 }</code></pre>
-    <p class="small muted"><code>difficulty</code> is one of <code>easy</code>, <code>medium</code>, <code>hard</code>,
-    <code>mixed</code>. <code>count</code>, <code>tags</code> and <code>cover</code> are optional: the number is only a
-    label, the card always plays whatever the JSON file actually contains.</p>
+    <p class="small muted"><code>count</code> is optional and only printed as “N puzzles” on the row; the set always
+    plays whatever the JSON file actually contains. <code>description</code> is used as the row's tooltip.</p>
     <p class="small">A set is also playable directly, without the landing page:
     <code>play.html?set=puzzles/round-1.json</code>. Links are relative, so this works just as well on GitHub Pages.</p>
   </div>
