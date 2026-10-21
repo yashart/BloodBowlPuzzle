@@ -147,8 +147,8 @@ async function bootLanding() {
       title: 'Blood Bowl Puzzles',
       categories: [{
         id: 'all',
-        title: 'All puzzles',
-        sets: [{ id: 'default', title: 'Default deck', file: 'puzzles.json', count: null }],
+        title: 'Game basics',
+        sets: [{ id: 'default', title: 'Complete deck', file: 'puzzles.json', count: null }],
       }],
     };
   }
@@ -187,32 +187,50 @@ function screenError(title, message, isPlay = false) {
 
 /* ---------------- landing ---------------- */
 
-/** One set: its pack name, how many puzzles it holds, and a link to its deck. */
-function setRowHtml(s) {
+const DIFFICULTY_LABELS = { easy: 'easy', medium: 'medium', hard: 'hard', mixed: 'mixed' };
+
+/** "1 puzzle" / "4 puzzles" — with the difficulty in the same breath. */
+function packMetaHtml(s) {
   const n = Number(s.count);
-  const meta = Number.isFinite(n) && s.count !== null && s.count !== undefined && s.count !== ''
-    ? `${n} puzzle${n === 1 ? '' : 's'}`
-    : '';
-  const tip = s.description ? `${s.description} (${s.file})` : s.file;
+  const hasCount = s.count !== null && s.count !== undefined && s.count !== '' && Number.isFinite(n);
+  const diff = DIFFICULTY_LABELS[String(s.difficulty || '').toLowerCase()] || '';
+  const diffChip = diff ? `<span class="chip ${diff}">${esc(diff)}</span>` : '';
+  const count = hasCount ? `${n} puzzle${n === 1 ? '' : 's'}` : '';
+  return `${diffChip}${count ? `<span class="pack-count">${esc(count)}</span>` : ''}`;
+}
+
+/** One pack: preview picture, its name, what is inside, and how to start it. */
+function setCardHtml(s) {
+  const title = s.title || s.id;
+  const meta = packMetaHtml(s);
+  const cover = s.cover
+    ? `<img src="${esc(s.cover)}" alt="" loading="lazy" decoding="async">`
+    : '<span class="set-cover-empty">no preview</span>';
+  const tip = s.description ? `${s.description} — ${title}` : title;
+
   return `
-    <li class="set-row">
-      <a class="set-link" href="${esc(playUrl(s.file))}" title="${esc(tip)}">
-        <span class="set-title">${esc(s.title || s.id)}</span>
-        ${meta ? `<span class="set-meta">${esc(meta)}</span>` : ''}
-      </a>
-      <a class="set-json mono" href="${esc(s.file)}" target="_blank" rel="noopener"
-         title="Open the puzzles.json for this set">json</a>
-    </li>`;
+    <article class="set-card">
+      <a class="set-cover" href="${esc(playUrl(s.file))}" tabindex="-1" aria-hidden="true">${cover}</a>
+      <div class="set-body">
+        <h3 class="set-title">${esc(title)}</h3>
+        <div class="set-meta">${meta}</div>
+        <div class="set-actions">
+          <a class="btn primary btn-sm" href="${esc(playUrl(s.file))}" title="${esc(tip)}">Play</a>
+          <a class="set-file mono" href="${esc(s.file)}" target="_blank" rel="noopener"
+             title="Open the puzzles.json file this pack plays">puzzles.json</a>
+        </div>
+      </div>
+    </article>`;
 }
 
 function categoryHtml(cat) {
-  const sets = (cat.sets || []).map(setRowHtml).join('');
+  const cards = (cat.sets || []).map(setCardHtml).join('');
   return `
     <section class="category" id="cat-${esc(cat.id)}">
       <h2 class="category-title">${esc(cat.title)}</h2>
-      ${sets
-        ? `<ul class="set-list">${sets}</ul>`
-        : '<p class="muted small">No sets in this category yet.</p>'}
+      ${cards
+        ? `<div class="set-grid">${cards}</div>`
+        : '<p class="muted small">No packs in this category yet.</p>'}
     </section>`;
 }
 

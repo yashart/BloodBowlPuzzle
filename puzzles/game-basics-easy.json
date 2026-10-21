@@ -1,9 +1,5 @@
 {
   "version": 1,
-  "meta": {
-    "count": 1,
-    "title": "puzzles/easy.json"
-  },
   "puzzles": [
     {
       "id": "base-puzzles-05",

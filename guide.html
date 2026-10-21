@@ -86,12 +86,12 @@
   <div class="card">
     <h2>Adding a category or a set</h2>
     <p>The landing page is driven by <code>sets.json</code>. A <b>category</b> has a title, a description and a list of
-    <b>sets</b>; every set points at its own <code>puzzles.json</code> file. The landing page shows one row per set with
-    just the pack name and how many puzzles it holds; the row plays the set and the small <code>json</code> link opens the
-    deck file.</p>
+    <b>sets</b>; every set points at its own <code>puzzles.json</code> file. The landing page shows one card per pack with
+    a preview picture, the pack name, its difficulty and puzzle count; <b>Play</b> starts the pack and the
+    <code>puzzles.json</code> link opens its deck file.</p>
     <pre class="small"><code>{
-  "id": "my-cup",
-  "title": "My Tournament",
+  "id": "users-packs",
+  "title": "Users packs",
   "description": "Puzzles from last weekend.",
   "sets": [
     {
@@ -99,12 +99,15 @@
       "title": "Round 1 — Bash",
       "file": "puzzles/round-1.json",
       "count": 2,
+      "difficulty": "hard",
+      "cover": "images/puzzle-01.png",
       "description": "Two puzzles, no rerolls."
     }
   ]
 }</code></pre>
-    <p class="small muted"><code>count</code> is optional and only printed as “N puzzles” on the row; the set always
-    plays whatever the JSON file actually contains. <code>description</code> is used as the row's tooltip.</p>
+    <p class="small muted"><code>count</code> is optional and printed as “N puzzles”; <code>cover</code> is the preview
+    picture on the card and <code>description</code> its tooltip. The pack always plays whatever the JSON file actually
+    contains.</p>
     <p class="small">A set is also playable directly, without the landing page:
     <code>play.html?set=puzzles/round-1.json</code>. Links are relative, so this works just as well on GitHub Pages.</p>
   </div>
@@ -130,7 +133,7 @@
         <tr><td class="mono">index.html</td><td>The landing page: puzzle sets grouped by category, each linking to its own <code>puzzles.json</code>.</td></tr>
         <tr><td class="mono">play.html</td><td>The quiz: puzzle screen, action panel, optional odds slider, reveal, recap. Reads <code>?set=path/to/puzzles.json</code>.</td></tr>
         <tr><td class="mono">sets.json</td><td>The catalogue the landing page renders: categories and the sets (deck files) inside each.</td></tr>
-        <tr><td class="mono">puzzles/</td><td>Themed decks, e.g. <code>puzzles/scoring.json</code> — just more <code>puzzles.json</code> files.</td></tr>
+        <tr><td class="mono">puzzles/</td><td>The packs shown on the landing page, e.g. <code>puzzles/game-basics-advanced.json</code> — just more <code>puzzles.json</code> files.</td></tr>
         <tr><td class="mono">editor.html</td><td>The puzzle authoring form with live JSON and preview.</td></tr>
         <tr><td class="mono">puzzles.json</td><td>The default deck, and the one <code>play.html</code> falls back to without <code>?set=</code>.</td></tr>
         <tr><td class="mono">js/app.js</td><td>Quiz flow: action buttons, optional odds, reveal and recap.</td></tr>

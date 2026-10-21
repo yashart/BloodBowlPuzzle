@@ -27,22 +27,25 @@ puzzles were played and, if any odds were predicted, their mean error.
 
 ## Landing page and sets
 
-`index.html` is a **landing page, not the quiz**. It is deliberately plain: the site title, a **Create new set** button,
-and every deck grouped by category as one row — pack name, number of puzzles, and a small `json` link to the raw deck.
-Clicking the row opens `play.html?set=<path to that deck>`; the `json` link opens the deck file itself.
+`index.html` is a **landing page, not the quiz**. It shows the site title and a **Create new set** button, then every
+pack as a card grouped by category: a preview picture, the pack name, a difficulty chip with how many puzzles it holds,
+a **Play** button and a `puzzles.json` link to the deck file itself.
 
 Each set is a self-contained deck file in exactly the same format as the root `puzzles.json`
 (`{ "version": 1, "puzzles": [ … ] }` — a bare array works too). The demo catalogue ships with:
 
 ```
 sets.json
-puzzles.json            the complete deck (every puzzle)
-puzzles/scoring.json    scoring plays
-puzzles/agility.json    dodging / Skaven
-puzzles/blocking.json   blocks, armour, injuries
-puzzles/easy.json       easy only
-puzzles/medium.json     medium only
+puzzles.json                            the complete deck (every puzzle)
+puzzles/game-basics-easy.json           Game basics: easy
+puzzles/game-basics-advanced.json       Game basics: advanced
+puzzles/mr-mesmer.json                  mr_mesmer's pack
 ```
+
+The landing page shows two categories:
+
+* **Game basics** — `Game basics: easy` (1 puzzle) and `Game basics: advanced` (4 puzzles), split by difficulty.
+* **Users packs** — one pack per author, e.g. `mr_mesmer's pack` (the 4 puzzles he wrote).
 
 To add a category or a set, edit `sets.json` — nothing else:
 
@@ -57,15 +60,17 @@ To add a category or a set, edit `sets.json` — nothing else:
       "title": "Round 1 — Bash",
       "file": "puzzles/round-1.json",
       "count": 2,
+      "difficulty": "hard",
+      "cover": "images/puzzle-01.png",
       "description": "Two puzzles, no rerolls."
     }
   ]
 }
 ```
 
-`count` is what the row shows as “N puzzles” (leave it out and the row just shows the pack name); `description` is only
-used as the hover tooltip. The deck itself is whatever the file contains. A set is also playable directly, without
-visiting the landing page:
+`count` is what the card shows as “N puzzles” (leave it out and only the difficulty chip is printed), `cover` is the
+preview picture and `description` is used as the tooltip. The deck itself is whatever the file contains. A set is also
+playable directly, without visiting the landing page:
 `play.html?set=puzzles/round-1.json`. `play.html` without `?set=` falls back to the root `puzzles.json`, and
 `index.html?set=…` simply redirects to `play.html?set=…`.
 

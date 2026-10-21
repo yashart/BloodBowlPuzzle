@@ -1,85 +1,42 @@
 {
   "title": "Blood Bowl Puzzles",
-  "subtitle": "Pick a set, build the play and compare with the solution — no win/lose, just the right sequence and the real odds.",
   "categories": [
     {
-      "id": "starter",
-      "title": "Starter Collection",
-      "description": "The complete deck. Start here if you're new — it mixes scoring, dodging and blocking.",
+      "id": "game-basics",
+      "title": "Game basics",
       "sets": [
         {
-          "id": "all-puzzles",
-          "title": "All Puzzles — Complete Deck",
-          "file": "puzzles.json",
-          "description": "All 5 puzzles in one run: Human TD, Skaven tricks, lineman vs mummy and the snotling hunt.",
-          "difficulty": "mixed",
-          "count": 5,
-          "tags": ["all", "mixed"],
-          "cover": "images/puzzle-04.png"
-        }
-      ]
-    },
-    {
-      "id": "by-skill",
-      "title": "By Skill & Mechanic",
-      "description": "Practice one mechanic at a time. Each set is 1-2 puzzles focused on a single Blood Bowl idea.",
-      "sets": [
-        {
-          "id": "scoring",
-          "title": "Scoring Plays",
-          "file": "puzzles/scoring.json",
-          "description": "Human Thrower to Catcher for the touchdown. Pass, catch and movement.",
+          "id": "game-basics-easy",
+          "title": "Game basics: easy",
+          "file": "puzzles/game-basics-easy.json",
+          "description": "One simple scoring play to learn the flow: read the pitch, build the action sequence, guess the odds.",
           "difficulty": "easy",
           "count": 1,
-          "tags": ["passing", "catch", "agility"],
           "cover": "images/puzzle-04.png"
         },
         {
-          "id": "agility",
-          "title": "Agility & Dodging",
-          "file": "puzzles/agility.json",
-          "description": "Gutter Runner and Skitter through tackle zones. Risky dodges with and without rerolls.",
-          "difficulty": "medium",
-          "count": 2,
-          "tags": ["dodge", "reroll", "skaven"],
-          "cover": "images/puzzle-02.png"
-        },
-        {
-          "id": "bash",
-          "title": "Blocking & Armour",
-          "file": "puzzles/blocking.json",
-          "description": "Lineman vs Mummy blitz and the snotling injury hunt — blocks, armour breaks and KO odds.",
-          "difficulty": "medium",
-          "count": 2,
-          "tags": ["block", "armour", "injury"],
-          "cover": "images/puzzle-01.png"
-        }
-      ]
-    },
-    {
-      "id": "difficulty",
-      "title": "By Difficulty",
-      "description": "Quick filter if you want easy warm-ups or harder grinds.",
-      "sets": [
-        {
-          "id": "easy",
-          "title": "Easy — Warm-up",
-          "file": "puzzles/easy.json",
-          "description": "Single easy puzzle to learn the UI: Human TD with no rerolls.",
-          "difficulty": "easy",
-          "count": 1,
-          "tags": ["easy", "intro"],
-          "cover": "images/puzzle-04.png"
-        },
-        {
-          "id": "medium",
-          "title": "Medium — The Grind",
-          "file": "puzzles/medium.json",
-          "description": "4 medium puzzles: Skaven dodges, mummy blitzes and snotling removal.",
+          "id": "game-basics-advanced",
+          "title": "Game basics: advanced",
+          "file": "puzzles/game-basics-advanced.json",
+          "description": "Dodging through tackle zones, blitzing a Mummy and breaking a snotling's armour — with and without rerolls.",
           "difficulty": "medium",
           "count": 4,
-          "tags": ["medium", "challenge"],
           "cover": "images/puzzle-02.png"
+        }
+      ]
+    },
+    {
+      "id": "users-packs",
+      "title": "Users packs",
+      "sets": [
+        {
+          "id": "mr-mesmer",
+          "title": "mr_mesmer's pack",
+          "file": "puzzles/mr-mesmer.json",
+          "description": "Every puzzle authored by mr_mesmer: the Human touchdown, both Skaven dodges and the snotling hunt.",
+          "difficulty": "mixed",
+          "count": 4,
+          "cover": "images/puzzle-03.png"
         }
       ]
     }
