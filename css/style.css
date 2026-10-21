@@ -508,7 +508,12 @@ textarea { min-height: 96px; resize: vertical; font-family: var(--mono); font-si
 @media (max-width: 560px) { .split { grid-template-columns: 1fr; } }
 
 .preview-frame { border: 1px solid var(--line); border-radius: var(--radius-sm); background: #0b0e13; padding: .5rem; }
-.preview-frame img { display: block; width: 100%; height: auto; border-radius: 6px; }
+.preview-frame img { display: block; width: 100%; height: auto; max-height: 46vh; object-fit: contain; border-radius: 6px; }
+.img-source {
+  display: flex; align-items: center; justify-content: space-between; gap: .6rem;
+  margin-top: .4rem; padding: 0 .15rem; overflow-wrap: anywhere;
+}
+.img-source a { font-weight: 600; }
 .list-puzzles { display: grid; gap: .4rem; }
 .list-puzzles .item { display: flex; gap: .6rem; align-items: center; justify-content: space-between; padding: .35rem .5rem; border: 1px solid var(--line); border-radius: 8px; }
 .list-puzzles .item b { font-weight: 600; }

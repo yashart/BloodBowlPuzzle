@@ -174,11 +174,29 @@ chips so the legend matches the markers on the pitch image (cosmetic only, omit 
 markdown subset — `**bold**`, `` `code` ``, `- ` bullets, blank lines for paragraphs. HTML is escaped, so anything you
 paste is rendered literally.
 
-### Pitch images
+### Pitch images: a local file or a link
 
-Use whatever you like — a screenshot from the video game, a photo of your tabletop board, or an exported SVG. Reference
-it relative to the site root (`images/...`). The demo diagrams in `images/` were generated from coordinates by
-`site-src/generate_images.py`; feel free to delete them.
+Use whatever you like — a screenshot from the video game, a photo of your tabletop board, or an exported SVG. The
+`image` field takes either form:
+
+```json
+"image": "images/puzzle-01.png"                        // a file in the site
+"image": "https://example.com/pitches/bb-final.png"    // a link to an image on the web
+```
+
+The editor accepts both: paste an `https://…` link (quotes, angle brackets and stray spaces around it are trimmed) or
+type a path. In the editor preview the source is labelled 🌐 **link** or 📁 **local file**, with an *open ↗* link so you
+can check it loads. Links must point at the image itself — a gallery/file-sharing page (`drive.google.com/file/d/…`,
+an Imgur page) will not render, and the editor says so; for Google Drive use
+`https://drive.google.com/uc?export=view&id=<FILE_ID>`.
+
+Accepted values are relative paths, `http(s)` links, protocol-relative `//host/…` links and `data:image/…`. Anything
+else (`javascript:`, `file:`, `ftp:`…) is rejected with an error, both in the editor and when a deck is loaded — so a
+bad value never ends up as a broken `<img>`. Remote images are requested with `referrerpolicy="no-referrer"`, which
+keeps most hotlink protection from blanking them; if a host still refuses, download the file into `images/` instead.
+
+The demo diagrams in `images/` were generated from coordinates by `site-src/generate_images.py`; feel free to delete
+them.
 
 ## Shared leaderboard (Firebase, free tier)
 
