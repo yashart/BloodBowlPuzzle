@@ -210,7 +210,8 @@ function renderDeck() {
   }
   const host = $('#deck');
   if (!state.deck.length) {
-    host.innerHTML = `<p class="muted small">The deck is empty. Load <code>puzzles.json</code> (button above) or start building puzzles — every puzzle you add to the deck goes into the export.</p>`;
+    host.innerHTML = `<p class="muted small">The export is empty — fill in the form and press <b>Add to export</b> to put puzzles here.
+      To continue an existing set, use <b>Load deployed puzzles.json</b> or <b>Import JSON file…</b> above.</p>`;
     return;
   }
   host.innerHTML = `<div class="list-puzzles">${state.deck.map((p, i) => `
@@ -381,6 +382,17 @@ function wire() {
     e.target.value = '';
   });
 
+  $('#btn-clear-deck').addEventListener('click', () => {
+    if (!state.deck.length) { toast('The export is already empty'); return; }
+    if (!confirm(`Remove all ${state.deck.length} puzzle(s) from the export?`)) return;
+    state.deck = [];
+    state.deckSource = '';
+    state.dirtyDeck = false;
+    state.loadedFromFile = false;
+    renderDeck();
+    toast('Export cleared');
+  });
+
   $('#btn-download-deck').addEventListener('click', () => {
     if (!state.deck.length) { toast('The deck is empty'); return; }
     download('puzzles.json', puzzlesFileText());
@@ -414,10 +426,16 @@ function wire() {
 /* ----------------------------------------------------------- start */
 
 function start() {
+  // The editor always opens with an empty export: you are starting a fresh
+  // puzzle set. Existing decks are loaded on demand (button or file import).
+  state.deck = [];
+  state.deckSource = '';
+  state.dirtyDeck = false;
+  state.loadedFromFile = false;
+
   writeForm(blankPuzzle());
   renderDeck();
   wire();
-  $('#btn-load-file').click(); // try to pick up the deployed puzzles.json right away
 }
 
 start();

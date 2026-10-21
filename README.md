@@ -139,7 +139,9 @@ there so GitHub serves the folders as-is.
 
 Add puzzles to whichever deck the landing page should offer — a file under `puzzles/`, or the root `puzzles.json`. Author them in the browser:
 
-1. Open `editor.html` (locally or on the deployed site).
+1. Open `editor.html` (locally or on the deployed site). The export always starts **empty**, so you build a clean set
+   from scratch — nothing is loaded automatically. To continue an existing deck, press **Load deployed puzzles.json** or
+   **Import JSON file…**; **Clear export** empties it again at any time.
 2. Fill the form, watch the JSON and the live preview on the right.
 3. **Add to export** for every puzzle — the deck order is the playing order.
 4. **Download puzzles.json** and commit it over the old one (or into `puzzles/` as a new set, then list it in

@@ -11,31 +11,23 @@
 </head>
 <body data-page="editor">
 
-<header class="site-header">
-  <div class="wrap">
-    <a class="brand" href="index.html">
-      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true">
-        <ellipse cx="16" cy="16" rx="10" ry="13" fill="#e8e2d4" stroke="#0d1015" stroke-width="2"/>
-        <path d="M16 6.5v19M11.5 11h9M11.5 16h9M11.5 21h9" stroke="#b03030" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      <span>Blood Bowl <b>Puzzles</b><small>puzzle editor</small></span>
-    </a>
-    <nav class="nav">
-      <a href="index.html">Puzzle sets</a>
-      <a href="play.html">Play the default deck</a>
-      <a href="guide.html">How it works</a>
-      <a href="editor.html" aria-current="page">Puzzle editor</a>
-    </nav>
-  </div>
-</header>
-
 <main class="wrap">
+
+  <div class="editor-top">
+    <h1 class="editor-title">Puzzle editor</h1>
+    <div class="editor-top-links">
+      <a class="back-link" href="index.html">← All sets</a>
+      <a class="muted small" href="guide.html">How it works</a>
+    </div>
+  </div>
 
   <div class="banner">
     <div style="flex:1 1 340px">
       <b>Workflow:</b> fill in the form → <b>Add to export</b> → <b>Download puzzles.json</b> → drop that file
       (and your artwork into <code>images/</code>) into your GitHub repository. The live site reads <code>puzzles.json</code>
       at startup, so no rebuild is needed.
+      <div class="muted small" style="margin-top:.3rem">The export starts <b>empty</b> on every visit — you are building a
+      fresh puzzle set. To continue an existing one, load it with the buttons on the right.</div>
     </div>
     <div class="btn-row">
       <button id="btn-load-file" class="btn-sm">Load deployed puzzles.json</button>
@@ -169,12 +161,17 @@
       <div class="card">
         <div class="card-top">
           <h2 style="margin:0">Export</h2>
-          <span class="muted small" style="margin-left:auto" id="deck-source"></span>
+          <div class="btn-row" style="margin-left:auto">
+            <span class="muted small" id="deck-source"></span>
+            <button id="btn-clear-deck" class="btn-sm" title="Throw away every puzzle in the export">Clear export</button>
+          </div>
         </div>
         <div id="deck"></div>
         <div class="btn-row" style="margin-top:.8rem">
           <button id="btn-download-deck" class="primary">Download puzzles.json</button>
         </div>
+        <p class="muted small" style="margin-top:.5rem">The export starts empty so you can build a clean set from scratch.
+        Use <b>Clear export</b> above to empty it again at any time.</p>
         <hr>
         <h3>Bulk import</h3>
         <p class="muted small">Paste a single puzzle object or a whole <code>{ "version": 1, "puzzles": [ … ] }</code> file.</p>
@@ -211,13 +208,6 @@
     </section>
   </div>
 </main>
-
-<footer class="site-footer">
-  <div class="wrap">
-    <span>Blood Bowl Puzzles — unofficial fan project.</span>
-    <span><a href="index.html">Puzzle sets</a> · <a href="guide.html">Scoring &amp; maths</a></span>
-  </div>
-</footer>
 
 <script>
 /* Safety net for stale module caching: after a deploy the browser can pair a

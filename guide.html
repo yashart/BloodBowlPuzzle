@@ -115,7 +115,9 @@
   <div class="card">
     <h2>Adding puzzles</h2>
     <ol>
-      <li>Open the <a href="editor.html">puzzle editor</a>, fill in the form, watch the JSON and the preview, then <b>Add to export</b>.</li>
+      <li>Open the <a href="editor.html">puzzle editor</a>, fill in the form, watch the JSON and the preview, then <b>Add to export</b>.
+      The export starts empty on every visit — <b>Clear export</b> empties it again, and <b>Load deployed puzzles.json</b> /
+      <b>Import JSON file…</b> bring an existing deck back in.</li>
       <li>Press <b>Download puzzles.json</b>.</li>
       <li>For the pitch image you can either put a file into the <code>images/</code> folder and reference it as
       <code>images/your-file.png</code>, or paste a link to an image on the web
@@ -134,7 +136,7 @@
         <tr><td class="mono">play.html</td><td>The quiz: puzzle screen, action panel, optional odds slider, reveal, recap. Reads <code>?set=path/to/puzzles.json</code>.</td></tr>
         <tr><td class="mono">sets.json</td><td>The catalogue the landing page renders: categories and the sets (deck files) inside each.</td></tr>
         <tr><td class="mono">puzzles/</td><td>The packs shown on the landing page, e.g. <code>puzzles/game-basics-advanced.json</code> — just more <code>puzzles.json</code> files.</td></tr>
-        <tr><td class="mono">editor.html</td><td>The puzzle authoring form with live JSON and preview.</td></tr>
+        <tr><td class="mono">editor.html</td><td>The puzzle authoring form with live JSON and preview; its export starts empty so each session builds a fresh set.</td></tr>
         <tr><td class="mono">puzzles.json</td><td>The default deck, and the one <code>play.html</code> falls back to without <code>?set=</code>.</td></tr>
         <tr><td class="mono">js/app.js</td><td>Quiz flow: action buttons, optional odds, reveal and recap.</td></tr>
         <tr><td class="mono">js/engine.js</td><td>Markdown subset, statistics (t-interval, Wilson), puzzle loading and validation.</td></tr>

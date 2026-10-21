@@ -480,6 +480,24 @@ table.board tr.me td:first-child { box-shadow: inset 3px 0 0 var(--blue); }
 
 /* ----------------------------------------------------------- editor */
 
+body[data-page="editor"] main { padding: clamp(1.2rem, 3vw, 2rem) 0 3rem; }
+
+.editor-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .8rem;
+  flex-wrap: wrap;
+  margin-bottom: .9rem;
+}
+.editor-title {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.6vw, 1.8rem);
+  letter-spacing: -.02em;
+}
+.editor-top-links { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+
+
 .editor-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
 @media (max-width: 1000px) { .editor-grid { grid-template-columns: 1fr; } }
 .field { margin-bottom: .75rem; }
