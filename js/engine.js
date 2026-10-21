@@ -154,7 +154,7 @@ export function legendColorOptions(selected = '') {
  * A puzzle may override the list with its own `actions` array.
  */
 export const DEFAULT_ACTIONS = [
-  'block 1d', 'block 2d', 'block uphill', 'dodge', 'gfi', 'pass', 'catch',
+  'block 1d', 'block 2d', 'block 3d', 'block uphill', 'dodge', 'gfi', 'pass', 'catch',
 ];
 
 /** Not an action: pressing it wipes the solution built so far. */
@@ -164,6 +164,7 @@ export const CLEAR_LABEL = 'clear';
 export const ACTION_COLORS = {
   'block 1d': 'blue',
   'block 2d': 'blue',
+  'block 3d': 'blue',
   'block uphill': 'blue',
   'dodge': 'yellow',
   'catch': 'yellow',

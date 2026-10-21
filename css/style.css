@@ -282,6 +282,7 @@ input[type="range"]::-moz-range-thumb {
 .action-btn.blue,
 .action-btn[data-action="block 1d"],
 .action-btn[data-action="block 2d"],
+.action-btn[data-action="block 3d"],
 .action-btn[data-action="block uphill"] {
   background: rgba(63, 140, 255, .18);
   border-color: rgba(63, 140, 255, .5);
@@ -290,6 +291,7 @@ input[type="range"]::-moz-range-thumb {
 .action-btn.blue:hover,
 .action-btn[data-action="block 1d"]:hover,
 .action-btn[data-action="block 2d"]:hover,
+.action-btn[data-action="block 3d"]:hover,
 .action-btn[data-action="block uphill"]:hover {
   background: rgba(63, 140, 255, .28);
   border-color: rgba(63, 140, 255, .75);

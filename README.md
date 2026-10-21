@@ -10,7 +10,7 @@ For every puzzle the player gets a pitch image, the mission text ("score the tou
 skills in this puzzle**, and a panel of action buttons:
 
 ```
-block 1d   block 2d   block uphill   dodge   gfi   pass   catch   clear
+block 1d   block 2d   block 3d   block uphill   dodge   gfi   pass   catch   clear
 ```
 
 Every press appends that button's label to **Your solution**, so pressing *block 2d* and then *dodge* gives
